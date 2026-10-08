@@ -192,8 +192,12 @@ object CarHotspotEnabler {
      * refused before this point.
      *
      * Returns the failure, or null when the service accepted the request.
+     *
+     * Both lint checks are suppressed deliberately. This build targets API 37 but runs on API 27,
+     * where hidden APIs are unrestricted; on a newer platform the lookup throws and [classify]
+     * turns that into [Outcome.Unsupported], so the caller falls back to waiting.
      */
-    @SuppressLint("PrivateApi")
+    @SuppressLint("PrivateApi", "SoonBlockedPrivateApi")
     private fun invokeStartTethering(
         context: Context,
         tetherStart: AtomicReference<TetherStart>,
