@@ -1,3 +1,25 @@
+# wudi81 v15 — 2026-10-08
+
+基于上游 [hiscatwang/DiPlay](https://github.com/hiscatwang/DiPlay) `android81-universal`
+分支的 v15 通用版（versionCode 44），在其上增加自动开启车机热点，versionCode 45。
+
+- **新增：自动开启车机自带热点。** 连接前调用 `IConnectivityManager.startTethering` 打开车机热点，
+  不再依赖用户每次上车手动开启。不读取也不修改已保存的热点 SSID / 密码。
+- 新增固件权限门槛探测：读取 `config_mobile_hotspot_provision_app` 判断本机需要
+  `WRITE_SETTINGS` app-op 还是无法获取的签名权限 `TETHER_PRIVILEGED`，
+  并在设置页显示结论、提供一键跳转授权入口。
+- 新增设置项「自动开启车机热点」（DiPlay 主设置页与 CarPlay 主机设置页各一处），默认开启。
+- 声明 `WRITE_SETTINGS` 权限，使应用出现在「特殊访问 → 修改系统设置」列表中。
+- 包名改为 `com.shihab.diplay.wudi81v15`，与上游发布的 `com.shihab.diplay.ora81` 共存。
+- 自动开启热点为尽力而为：拒绝、超时或不支持均只记录日志，不中断 CarPlay 连接，
+  仍回退到上游原有的热点等待与重试逻辑。
+- 完整继承上游 v15：Android 8.1 / 9 的 Wi-Fi Direct 兼容、v14 的同一 Wi-Fi／局域网模式与
+  有界启动恢复、v12 及更早的音频与显示适配。
+
+车主已在 `alps F9212A`（`ac8227l`，ARM，Android 9.1 / API 27，1024×600）上确认无线 CarPlay
+可连接。自动开启热点的端到端效果待授予「修改系统设置」权限后实车确认。
+详见[本版更新说明](docs/WUDI81_V15.md)。
+
 # DiPlay 0.2.10 — 2026-10-03
 
 - Publish CarPlay song metadata, position and artwork to Android media sessions; bound artwork queues and reject stale work across sessions (#82).
