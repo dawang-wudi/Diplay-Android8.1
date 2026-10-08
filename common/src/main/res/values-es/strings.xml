@@ -109,6 +109,8 @@
     <string name="apply_reconnects_carplay_for_size_resolution_music_buffer">Aplicar reconecta CarPlay para el tamaño, la resolución, el búfer de música y la frecuencia de imágenes. Los demás cambios se aplican en tu próxima conexión.</string>
     <string name="audio">Audio</string>
     <string name="audio_routing">Enrutamiento de audio</string>
+    <string name="use_iphone_microphone">Usar el micrófono del iPhone</string>
+    <string name="use_iphone_microphone_hint">Actívalo si esta pantalla de coche no tiene micrófono. DiPlay indica al iPhone que no ofrece entrada de micrófono, así que las llamadas y Siri usan el micrófono del propio iPhone.</string>
     <string name="auto">Auto</string>
     <string name="auto_start_on_boot">Inicio automático al arrancar</string>
     <string name="automatic_cluster_map_setup">Configuración automática del mapa del cuadro</string>

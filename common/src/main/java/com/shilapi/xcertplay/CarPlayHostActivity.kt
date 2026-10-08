@@ -355,6 +355,7 @@ class CarPlayHostActivity : ComponentActivity() {
     private var wirelessPermissionsReady = false
     private var wirelessHotspotMode = WirelessHotspotMode.WIFI_P2P
     private var autoEnableCarHotspot = false
+    private var useIphoneMicrophone = false
     private var autoEnableCarHotspotSection: View? = null
     private var carHotspotCapabilityView: TextView? = null
     private var carHotspotGrantButton: Button? = null
@@ -577,6 +578,7 @@ class CarPlayHostActivity : ComponentActivity() {
         remoteMfiToken = AirPlayPersistence.loadRemoteMfiToken(this)
         wirelessHotspotMode = AirPlayPersistence.loadWirelessHotspotMode(this)
         autoEnableCarHotspot = AirPlayPersistence.loadAutoEnableCarHotspot(this)
+        useIphoneMicrophone = AirPlayPersistence.loadUseIphoneMicrophone(this)
         existingWifiSsid = AirPlayPersistence.loadExistingWifiSsid(this)
         existingWifiPassphrase = AirPlayPersistence.loadExistingWifiPassphrase(this)
         manualHotspotSsid = AirPlayPersistence.loadManualHotspotSsid(this)
@@ -1387,6 +1389,24 @@ class CarPlayHostActivity : ComponentActivity() {
         }
 
         content.addView(
+            settingsSwitchRow(
+                label = getString(R.string.use_iphone_microphone),
+                checked = useIphoneMicrophone,
+                description = getString(R.string.use_iphone_microphone_hint),
+            ) { checked ->
+                useIphoneMicrophone = checked
+                appendLog(
+                    "iPhone microphone ${if (checked) "enabled" else "disabled"}; " +
+                        "applies when settings close",
+                )
+            },
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+            ).apply { topMargin = dp(12) },
+        )
+
+        content.addView(
             settingsCategoryHeader(getString(R.string.identity_appearance)),
             LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -1839,6 +1859,7 @@ class CarPlayHostActivity : ComponentActivity() {
         AirPlayPersistence.saveRemoteMfiToken(this, remoteMfiToken)
         AirPlayPersistence.saveWirelessHotspotMode(this, wirelessHotspotMode)
         AirPlayPersistence.saveAutoEnableCarHotspot(this, autoEnableCarHotspot)
+        AirPlayPersistence.saveUseIphoneMicrophone(this, useIphoneMicrophone)
         AirPlayPersistence.saveExistingWifiCredentials(this, existingWifiSsid, existingWifiPassphrase)
         AirPlayPersistence.saveManualHotspotSsid(this, manualHotspotSsid)
         AirPlayPersistence.saveManualHotspotPassphrase(this, manualHotspotPassphrase)
@@ -3342,7 +3363,7 @@ class CarPlayHostActivity : ComponentActivity() {
             cluster = clusterDisplayConfig(),
             rightHandDrive = rightHandDrive,
             hevc = hevcEnabled,
-            microphone = microphoneAvailable,
+            microphone = microphoneAvailable && !useIphoneMicrophone,
             manufacturer = normalizedManufacturer(),
             model = normalizedModel(),
             oemLabel = oemLabel,
@@ -3556,7 +3577,7 @@ class CarPlayHostActivity : ComponentActivity() {
     private fun createMediaEngine(sink: AndroidMediaSink): CarPlayMediaEngine =
         CarPlayMediaEngine(
             sink = sink,
-            microphoneEnabled = microphoneAvailable,
+            microphoneEnabled = microphoneAvailable && !useIphoneMicrophone,
             audioCaptureDirectory = audioCaptureDirectory(),
         )
 

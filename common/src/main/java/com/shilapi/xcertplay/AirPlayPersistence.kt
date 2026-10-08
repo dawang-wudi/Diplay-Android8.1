@@ -81,6 +81,7 @@ object AirPlayPersistence {
     private const val KEY_ADAPT_PIP_RESOLUTION = "adapt_pip_resolution"
     private const val KEY_AUTO_START_ON_BOOT = "auto_start_on_boot"
     private const val KEY_AUTO_ENABLE_CAR_HOTSPOT = "auto_enable_car_hotspot"
+    private const val KEY_USE_IPHONE_MICROPHONE = "use_iphone_microphone"
     private const val KEY_LOCATION_REPORTING_ENABLED = "location_reporting_enabled"
     private const val KEY_MFI_TARGET = "mfi_target"
     private const val KEY_MFI_I2C_PATH = "mfi_i2c_path"
@@ -420,6 +421,22 @@ object AirPlayPersistence {
     fun saveAutoEnableCarHotspot(context: Context, enabled: Boolean) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
             .putBoolean(KEY_AUTO_ENABLE_CAR_HOTSPOT, enabled)
+            .apply()
+    }
+
+    /**
+     * Whether to tell the iPhone that this head unit provides no microphone input.
+     *
+     * Off by default: a head unit with a microphone should keep using it, since it sits closer to
+     * the driver than the phone. Only useful on a head unit that has no microphone at all.
+     */
+    fun loadUseIphoneMicrophone(context: Context): Boolean =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getBoolean(KEY_USE_IPHONE_MICROPHONE, false)
+
+    fun saveUseIphoneMicrophone(context: Context, enabled: Boolean) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putBoolean(KEY_USE_IPHONE_MICROPHONE, enabled)
             .apply()
     }
 

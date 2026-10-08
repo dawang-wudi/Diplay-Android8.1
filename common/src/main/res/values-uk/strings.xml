@@ -112,6 +112,8 @@
     <string name="apply_reconnects_carplay_for_size_resolution_music_buffer">Застосування змін розміру, роздільної здатності, музичного буфера й частоти кадрів перепідключає CarPlay. Інші зміни діятимуть після наступного підключення.</string>
     <string name="audio">Аудіо</string>
     <string name="audio_routing">Спрямування аудіо</string>
+    <string name="use_iphone_microphone">Використовувати мікрофон iPhone</string>
+    <string name="use_iphone_microphone_hint">Увімкніть, якщо в головному пристрої немає мікрофона. DiPlay повідомить iPhone, що мікрофон не надається, тож виклики та Siri використовуватимуть мікрофон самого iPhone.</string>
     <string name="auto">Авто</string>
     <string name="auto_start_on_boot">Автозапуск після завантаження</string>
     <string name="automatic_cluster_map_setup">Автоматичне налаштування карти на приборці</string>

@@ -129,7 +129,8 @@ if (config_mobile_hotspot_provision_app.length == 2) {
 | 无线 CarPlay 连接（车机自带热点） | **车主已在实车确认可连接** |
 | 权限门槛探测 | **已在实际车机上取得诊断结果**：该固件 `provisioningApp=false`、
   `writeSettingsPage=true`，门槛为 `WRITE_SETTINGS`，路径可行 |
-| 自动开启热点的端到端效果 | **待授予权限后实车确认** |
+| **自动开启热点的端到端效果** | **已实车确认**：冷启动（热点原本关着）`tethering reported STARTED after 4ms`
+  → `Manual hotspot ready after 5722ms`（**5.7 秒**）；之后每次 `AlreadyEnabled`，**1.1~1.6 秒** |
 | 同一 Wi-Fi／局域网模式 | 未在实机验证 |
 | Wi-Fi Direct | 未在实机验证 |
 

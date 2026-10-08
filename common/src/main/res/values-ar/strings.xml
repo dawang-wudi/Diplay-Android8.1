@@ -109,6 +109,8 @@
     <string name="apply_reconnects_carplay_for_size_resolution_music_buffer">يعيد التطبيق اتصال CarPlay للحجم والدقة وذاكرة الموسيقى ومعدل الإطارات. تُطبق التغييرات الأخرى في اتصالك التالي.</string>
     <string name="audio">الصوت</string>
     <string name="audio_routing">توجيه الصوت</string>
+    <string name="use_iphone_microphone">استخدام ميكروفون iPhone</string>
+    <string name="use_iphone_microphone_hint">شغّل هذا الخيار إذا لم يكن لشاشة السيارة ميكروفون. سيخبر DiPlay الـ iPhone بأن الشاشة لا توفّر إدخالاً صوتياً، لذا ستستخدم المكالمات و Siri ميكروفون الـ iPhone نفسه.</string>
     <string name="auto">تلقائي</string>
     <string name="auto_start_on_boot">التشغيل التلقائي عند الإقلاع</string>
     <string name="automatic_cluster_map_setup">إعداد خريطة المجموعة التلقائي</string>

@@ -111,6 +111,8 @@
     <string name="apply_reconnects_carplay_for_size_resolution_music_buffer">Apply reconnects CarPlay for size, resolution, music buffer and frame rate. Other changes apply to your next connection.</string>
     <string name="audio">Audio</string>
     <string name="audio_routing">Audio routing</string>
+    <string name="use_iphone_microphone">Use the iPhone microphone</string>
+    <string name="use_iphone_microphone_hint">Turn this on when this head unit has no microphone. DiPlay tells the iPhone that it provides no microphone input, so calls and Siri use the iPhone microphone instead.</string>
     <string name="auto">Auto</string>
     <string name="auto_start_on_boot">Auto-start on boot</string>
     <string name="automatic_cluster_map_setup">Automatic cluster map setup</string>

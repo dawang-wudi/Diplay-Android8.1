@@ -476,6 +476,10 @@ class DiPlayActivity : ComponentActivity() {
                 AirPlayPersistence.loadSiriUsesNavigation(this)) { enabled ->
                 AirPlayPersistence.saveSiriUsesNavigation(this, enabled)
             }
+            toggle(card, getString(R.string.use_iphone_microphone), getString(R.string.use_iphone_microphone_hint),
+                AirPlayPersistence.loadUseIphoneMicrophone(this)) { enabled ->
+                AirPlayPersistence.saveUseIphoneMicrophone(this, enabled)
+            }
             mediaChannelControl(card)
             navigationChannelControl(card)
         }

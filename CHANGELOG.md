@@ -1,3 +1,16 @@
+# wudi81 v16 — 2026-10-08
+
+在同一分支上增加「使用 iPhone 的麦克风」，versionCode 46。包名不变，可直接覆盖 v45 并保留设置。
+
+- **新增：使用 iPhone 的麦克风。** 车机没有麦克风时，让通话和 Siri 改用 iPhone 自己的麦克风。
+  实现方式是**在 AirPlay `/info` 响应里省略 `audioInputFormats`**，即告知 iPhone 本接收端
+  不提供音频输入；同时不再启动本地麦克风采集。
+- 新增设置项「使用 iPhone 的麦克风」，位于 DiPlay 主设置页与 CarPlay 主机设置页的音频分区。
+  **默认关闭**——有麦克风的车机应继续使用车机麦克风（离驾驶员更近）。
+- 该开关只是协议层面的能力声明，**iOS 是否真的回退到 iPhone 麦克风尚未实车验证**。
+  已在文档中标注为实验性。
+- 保留 v15 的自动开启车机热点与全部上游功能。
+
 # wudi81 v15 — 2026-10-08
 
 基于上游 [hiscatwang/DiPlay](https://github.com/hiscatwang/DiPlay) `android81-universal`
