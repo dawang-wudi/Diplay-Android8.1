@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="picture_adjustments">Налаштування зображення</string>
+    <string name="picture_live_hint">Застосовується до основного зображення CarPlay та зберігається одразу. Оригінал призначений для тимчасового порівняння.</string>
+    <string name="picture_show_original">Показати оригінал</string>
+    <string name="picture_done">Готово</string>
+    <string name="picture_brightness">Яскравість</string>
+    <string name="picture_contrast">Контраст</string>
+    <string name="picture_saturation">Насиченість</string>
+    <string name="picture_warmth">Теплота</string>
+    <string name="picture_reset">Скинути зображення</string>
+</resources>

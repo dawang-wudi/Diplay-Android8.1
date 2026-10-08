@@ -1,0 +1,11 @@
+<resources>
+    <string name="contrib_audio_home_channel_preview_unavailable">لا يمكن معاينة تدفق صوت Android رقم %1$d على هذا الجهاز.</string>
+    <string name="contrib_audio_home_choice_summary">%1$s · %2$s</string>
+    <string name="contrib_audio_home_media_channel_label">تدفق صوت الوسائط</string>
+    <string name="contrib_audio_home_nav_channel_label">تدفق صوت الملاحة</string>
+    <string name="contrib_audio_home_nav_channel_note">0 = توجيه تلقائي. تختار القيم من 1 إلى 20 معرّفات تدفقات الصوت التقليدية، بما فيها مخارج الشركة المصنّعة التي تدعمها وحدة السيارة. اضغط على قيمة لمعاينتها. تُطبّق التغييرات عند إعادة الاتصال.</string>
+    <string name="contrib_audio_home_toggle_audio_focus">التركيز الصوتي</string>
+    <string name="contrib_audio_home_toggle_audio_focus_desc">تطلب وسائط CarPlay التركيز الصوتي. إذا اختفى الصوت بعد التفعيل، فأوقف هذا الخيار؛ إذ لا تتعامل بعض وحدات السيارة مع التركيز الصوتي بشكل صحيح. تُطبّق التغييرات عند إعادة الاتصال.</string>
+    <string name="siri_uses_navigation">تشغيل Siri عبر صوت الملاحة</string>
+    <string name="siri_uses_navigation_hint">تشغيل ردود Siri عبر مخرج الملاحة المحدد. أبقِ تركيز صوت الملاحة مفعّلاً. عطّل الخيار لاستخدام مخرج مساعد النظام. أعد الاتصال لتطبيق التغيير.</string>
+</resources>

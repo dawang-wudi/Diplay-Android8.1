@@ -1,0 +1,4 @@
+<resources>
+    <string name="navigation_audio_focus">التركيز الصوتي للملاحة</string>
+    <string name="navigation_audio_focus_hint">يطلب التركيز الصوتي أثناء إرشادات الملاحة ويحرره بين الإرشادات. قد تخفض السيارة صوت الوسائط. تُطبّق التغييرات عند إعادة الاتصال؛ عطّل الخيار إذا اختفى صوت الملاحة.</string>
+</resources>

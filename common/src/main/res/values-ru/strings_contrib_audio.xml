@@ -1,0 +1,11 @@
+<resources>
+    <string name="contrib_audio_home_channel_preview_unavailable">На этом устройстве нельзя прослушать аудиопоток Android %1$d.</string>
+    <string name="contrib_audio_home_choice_summary">%1$s · %2$s</string>
+    <string name="contrib_audio_home_media_channel_label">Аудиопоток мультимедиа</string>
+    <string name="contrib_audio_home_nav_channel_label">Аудиопоток навигации</string>
+    <string name="contrib_audio_home_nav_channel_note">0 — автоматическая маршрутизация. Значения 1–20 выбирают идентификаторы традиционных аудиопотоков, включая выходы производителя, поддерживаемые головным устройством. Нажмите значение для прослушивания. Изменения применяются после переподключения.</string>
+    <string name="contrib_audio_home_toggle_audio_focus">Аудиофокус</string>
+    <string name="contrib_audio_home_toggle_audio_focus_desc">Мультимедиа CarPlay запрашивает аудиофокус. Если после включения звук пропадает, отключите эту настройку: некоторые головные устройства некорректно обрабатывают аудиофокус. Изменения применяются после переподключения.</string>
+    <string name="siri_uses_navigation">Siri через канал навигации</string>
+    <string name="siri_uses_navigation_hint">Ответы Siri воспроизводятся через выбранный выход навигации. Оставьте аудиофокус навигации включённым. Отключите эту настройку для выхода системного помощника. Переподключитесь для применения.</string>
+</resources>

@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Diplay</string>
+    <string name="settings_android9_compat">The following settings are unavailable on Android 8.1/9 and are hidden:\n• Wi-Fi Direct — use the built-in car hotspot or USB instead.\n• HEVC software decoder — hardware decoding is used instead.</string>
+    <string name="android_9_compatibility">Android 8.1/9 compatibility</string>
+</resources>

@@ -1,0 +1,11 @@
+<resources>
+    <string name="contrib_audio_home_channel_preview_unavailable">No se puede previsualizar el flujo de audio de Android %1$d en este dispositivo.</string>
+    <string name="contrib_audio_home_choice_summary">%1$s · %2$s</string>
+    <string name="contrib_audio_home_media_channel_label">Flujo de audio multimedia</string>
+    <string name="contrib_audio_home_nav_channel_label">Flujo de audio de navegación</string>
+    <string name="contrib_audio_home_nav_channel_note">0 = enrutamiento automático. Los valores 1–20 seleccionan los identificadores de flujos de audio tradicionales, incluidas las salidas del fabricante compatibles con la unidad. Toca un valor para escucharlo. Los cambios se aplican al volver a conectar.</string>
+    <string name="contrib_audio_home_toggle_audio_focus">Foco de audio</string>
+    <string name="contrib_audio_home_toggle_audio_focus_desc">El audio multimedia de CarPlay solicita el foco de audio. Si al activarlo desaparece el sonido, desactívalo; algunas unidades gestionan mal el foco. Los cambios se aplican al volver a conectar.</string>
+    <string name="siri_uses_navigation">Siri usa el audio de navegación</string>
+    <string name="siri_uses_navigation_hint">Reproduce las respuestas de Siri por la salida de navegación elegida. Mantén activado el foco de audio de navegación. Desactiva esta opción para usar la salida del asistente del sistema. Vuelve a conectar para aplicar.</string>
+</resources>

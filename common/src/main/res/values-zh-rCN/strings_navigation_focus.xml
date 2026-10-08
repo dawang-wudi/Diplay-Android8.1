@@ -1,0 +1,4 @@
+<resources>
+    <string name="navigation_audio_focus">导航音频焦点</string>
+    <string name="navigation_audio_focus_hint">播报时申请导航焦点，播报结束后释放。车机可能暂时压低媒体音量。更改在重新连接后生效；若导航无声，可关闭此项。</string>
+</resources>

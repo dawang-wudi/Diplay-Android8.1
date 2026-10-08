@@ -1,0 +1,4 @@
+<resources>
+    <string name="navigation_audio_focus">Аудіофокус навігації</string>
+    <string name="navigation_audio_focus_hint">Запитує фокус під час підказок і звільняє його між ними. Автомобіль може приглушувати мультимедіа. Зміни діють після повторного підключення; вимкніть, якщо зник звук навігації.</string>
+</resources>

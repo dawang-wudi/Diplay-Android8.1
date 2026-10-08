@@ -1,0 +1,4 @@
+<resources>
+    <string name="navigation_audio_focus">Foco de audio de navegación</string>
+    <string name="navigation_audio_focus_hint">Solicita el foco durante las indicaciones y lo libera entre ellas. El coche puede reducir el volumen multimedia. Los cambios se aplican al reconectar; desactívalo si la navegación queda en silencio.</string>
+</resources>

@@ -1,0 +1,4 @@
+<resources>
+    <string name="navigation_audio_focus">Navigation audio focus</string>
+    <string name="navigation_audio_focus_hint">Request navigation focus during guidance and release it between prompts. The car may lower media volume. Changes apply on reconnect; disable this if guidance becomes silent.</string>
+</resources>
