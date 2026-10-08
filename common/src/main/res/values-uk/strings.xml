@@ -497,6 +497,13 @@
     <string name="settings_gesture_fingers_option">%1$d пальців</string>
     <string name="settings_gesture_fingers_hint">Виберіть вільний жест. Якщо три пальці відкривають системну панель, використовуйте два або чотири.</string>
     <string name="waiting_for_car_hotspot">Очікування запуску точки доступу автомобіля… Підключення продовжиться автоматично.</string>
+    <string name="auto_enable_car_hotspot">Увімкнути точку доступу автомобіля</string>
+    <string name="turn_the_car_hotspot_on_before_connecting">DiPlay вмикає точку доступу автомобіля перед підключенням. Більшості прошивок також потрібне «Змінення системних налаштувань».</string>
+    <string name="grant_modify_system_settings">Надати «Змінення системних налаштувань»</string>
+    <string name="car_hotspot_needs_system_permission">Ця прошивка залишає режим модема системному застосунку, тому DiPlay не може увімкнути точку доступу</string>
+    <string name="car_hotspot_ready_to_turn_on">«Змінення системних налаштувань» надано; DiPlay може увімкнути точку доступу</string>
+    <string name="car_hotspot_needs_modify_system_settings">«Змінення системних налаштувань» ще не надано; надайте один раз і підключіться знову</string>
+    <string name="car_hotspot_grant_page_missing">У цій прошивці немає сторінки «Змінення системних налаштувань»; увімкніть точку доступу вручну або через ADB</string>
     <string name="car_hotspot_startup_hint">Точка доступу ще не готова. Підключення зачекає, поки автомобіль завершить її запуск.</string>
     <string name="car_hotspot_wait_timeout">Точка доступу автомобіля не готова. Повторна спроба відбудеться автоматично; переконайтеся, що точку доступу ввімкнено.</string>
     <string name="hotspot_network_not_ready">Мережа точки доступу не готова</string>

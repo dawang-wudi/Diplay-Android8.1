@@ -497,6 +497,13 @@
     <string name="settings_gesture_fingers_option">%1$d أصابع</string>
     <string name="settings_gesture_fingers_hint">اختر إيماءة لا يستخدمها نظام السيارة. إذا فتحت ثلاثة أصابع لوحة النظام، فاختر إصبعين أو أربعة.</string>
     <string name="waiting_for_car_hotspot">بانتظار اكتمال تشغيل نقطة اتصال السيارة… سيستمر الاتصال تلقائيًا.</string>
+    <string name="auto_enable_car_hotspot">تشغيل نقطة اتصال السيارة</string>
+    <string name="turn_the_car_hotspot_on_before_connecting">يشغّل DiPlay نقطة اتصال السيارة قبل الاتصال. تتطلب معظم الإصدارات أيضًا إذن تعديل إعدادات النظام.</string>
+    <string name="grant_modify_system_settings">منح إذن تعديل إعدادات النظام</string>
+    <string name="car_hotspot_needs_system_permission">يحتفظ هذا الإصدار بالمشاركة لتطبيق نظام، لذلك لا يمكن لـ DiPlay تشغيل نقطة الاتصال</string>
+    <string name="car_hotspot_ready_to_turn_on">تم منح إذن تعديل إعدادات النظام، ويمكن لـ DiPlay تشغيل نقطة الاتصال</string>
+    <string name="car_hotspot_needs_modify_system_settings">لم يُمنح إذن تعديل إعدادات النظام بعد؛ امنحه مرة واحدة ثم أعد الاتصال</string>
+    <string name="car_hotspot_grant_page_missing">لا توجد صفحة تعديل إعدادات النظام في هذا الإصدار؛ شغّل نقطة الاتصال يدويًا أو استخدم ADB</string>
     <string name="car_hotspot_startup_hint">نقطة الاتصال ليست جاهزة بعد. سينتظر الاتصال حتى تنتهي السيارة من تشغيلها.</string>
     <string name="car_hotspot_wait_timeout">نقطة اتصال السيارة ليست جاهزة. تجري إعادة المحاولة تلقائيًا؛ تأكد من تشغيل نقطة الاتصال.</string>
     <string name="hotspot_network_not_ready">شبكة نقطة الاتصال غير جاهزة</string>

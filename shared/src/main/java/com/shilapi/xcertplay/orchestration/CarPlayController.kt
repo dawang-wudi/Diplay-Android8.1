@@ -38,6 +38,7 @@ import com.shilapi.xcertplay.mfi.Iap2MfiAuthenticationClient
 import com.shilapi.xcertplay.mfi.MfiAuthenticationClient
 import com.shilapi.xcertplay.mfi.RemoteMfiAuthenticationClient
 import com.shilapi.xcertplay.mfi.LocalMfiAuthenticationClient
+import com.shilapi.xcertplay.network.CarHotspotEnabler
 import com.shilapi.xcertplay.network.CarPlayBonjour
 import com.shilapi.xcertplay.network.diagnosticSummary
 import com.shilapi.xcertplay.network.CarPlayVpnService
@@ -1874,6 +1875,9 @@ class CarPlayController(
 
     private fun startWirelessHotspot(generation: Int): WirelessHotspotInfo {
         val hotspotMode = config.wirelessHotspotMode
+        if (config.autoEnableCarHotspot && hotspotMode == WirelessHotspotMode.MANUAL) {
+            enableCarHotspotIfNeeded(generation)
+        }
         val manager: WirelessHotspotManager = when (hotspotMode) {
             WirelessHotspotMode.WIFI_P2P -> WifiP2pGroupManager(appContext, ::debugLog)
             WirelessHotspotMode.LOCAL_ONLY_HOTSPOT -> LocalOnlyHotspotManager(appContext, ::debugLog)
@@ -1915,6 +1919,34 @@ class CarPlayController(
                 "Could not establish ${hotspotMode.name} hotspot: " +
                     (failure.message ?: failure.javaClass.simpleName),
                 failure,
+            )
+        }
+    }
+
+    /**
+     * Turns the head unit's own hotspot on before the manual hotspot wait begins.
+     *
+     * Firmware that does not start its hotspot at boot would otherwise make the manual mode time
+     * out. A refusal is logged and never fails the session: the hotspot may already be usable, and
+     * the manual wait below remains the authority on whether it is.
+     */
+    private fun enableCarHotspotIfNeeded(generation: Int) {
+        val outcome = try {
+            CarHotspotEnabler.enable(
+                context = appContext,
+                timeoutMillis = CAR_HOTSPOT_ENABLE_TIMEOUT_MILLIS,
+                isCancelled = { isStaleWirelessRun(generation) },
+                onDiagnostic = ::debugLog,
+            )
+        } catch (error: Throwable) {
+            debugLog("Car hotspot enable failed", error)
+            return
+        }
+        debugLog("Car hotspot enable outcome=$outcome")
+        if (outcome is CarHotspotEnabler.Outcome.PermissionRequired) {
+            debugLog(
+                "Car hotspot needs Modify system settings for ${appContext.packageName}; " +
+                    "the manual hotspot wait continues",
             )
         }
     }
@@ -2396,6 +2428,9 @@ class CarPlayController(
         private val diagnosticAttempts = AtomicInteger()
         private const val IAP2_IPHONE_UUID = "00000000-deca-fade-deca-deafdecacafe"
         private const val MANUAL_HOTSPOT_START_TIMEOUT_MILLIS = WirelessStartupPolicy.HOTSPOT_READY_MILLIS
+        // Bounds only the wait for tethering to report back. A timeout here is not fatal: the
+        // manual hotspot wait still runs and remains the authority on the session.
+        private const val CAR_HOTSPOT_ENABLE_TIMEOUT_MILLIS = 20_000L
         private const val HOTSPOT_START_TIMEOUT_MILLIS = 60_000L
         private const val WIFI_P2P_START_TIMEOUT_MILLIS = 20_000L
         private const val PAIR_TIMEOUT_MILLIS = 5 * 60_000L

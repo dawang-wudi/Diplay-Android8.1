@@ -496,6 +496,13 @@
     <string name="settings_gesture_fingers_option">%1$d fingers</string>
     <string name="settings_gesture_fingers_hint">Choose a gesture your head unit does not use. If three fingers open a system panel, choose two or four.</string>
     <string name="waiting_for_car_hotspot">Waiting for the car hotspot to finish starting… Connection will continue automatically.</string>
+    <string name="auto_enable_car_hotspot">Turn the car hotspot on</string>
+    <string name="turn_the_car_hotspot_on_before_connecting">DiPlay turns the car hotspot on before connecting. Most firmware also needs Modify system settings.</string>
+    <string name="grant_modify_system_settings">Grant Modify system settings</string>
+    <string name="car_hotspot_needs_system_permission">This firmware reserves tethering for a system app, so DiPlay cannot turn the hotspot on</string>
+    <string name="car_hotspot_ready_to_turn_on">Modify system settings is granted; DiPlay can turn the hotspot on</string>
+    <string name="car_hotspot_needs_modify_system_settings">Modify system settings is not granted yet; grant it once and reconnect</string>
+    <string name="car_hotspot_grant_page_missing">This firmware has no Modify system settings page; turn the hotspot on manually or use ADB</string>
     <string name="car_hotspot_startup_hint">The hotspot is not ready yet. Connecting will wait for the car to finish starting it.</string>
     <string name="car_hotspot_wait_timeout">The car hotspot is not ready. Retrying automatically; check that the hotspot is enabled.</string>
     <string name="hotspot_network_not_ready">Hotspot network is not ready</string>

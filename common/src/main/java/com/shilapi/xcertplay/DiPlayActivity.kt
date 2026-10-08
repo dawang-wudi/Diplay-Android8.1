@@ -38,6 +38,7 @@ import com.shilapi.xcertplay.hud.BydAdbAccess
 import com.shilapi.xcertplay.hud.BydNavigationOutputs
 import com.shilapi.xcertplay.hud.BydOutputSettings
 import com.shilapi.xcertplay.host.R
+import com.shilapi.xcertplay.network.CarHotspotEnabler
 import com.shilapi.xcertplay.orchestration.WirelessHotspotMode
 import com.shilapi.xcertplay.transport.EvChargingConnectors
 import java.io.File
@@ -128,6 +129,50 @@ class DiPlayActivity : ComponentActivity() {
         val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName"))
         if (runCatching { startActivity(intent) }.isFailure) {
             android.widget.Toast.makeText(this, R.string.center_map_no_permission_screen, android.widget.Toast.LENGTH_LONG).show()
+        }
+    }
+
+    /**
+     * States the hotspot permission gate and offers the only page that can grant it.
+     *
+     * WRITE_SETTINGS is a special access permission, not a runtime one, so it never appears in the
+     * app's permission list. Without this row the setting looks like it has no permission at all.
+     * The page is rebuilt on resume, so the row reflects the grant as soon as the user comes back.
+     */
+    private fun addCarHotspotPermissionRow(card: LinearLayout) {
+        val capability = CarHotspotEnabler.capability(this)
+        card.addView(
+            label(
+                when {
+                    capability.provisioningAppConfigured == true ->
+                        getString(R.string.car_hotspot_needs_system_permission)
+                    capability.writeSettingsGranted ->
+                        getString(R.string.car_hotspot_ready_to_turn_on)
+                    !capability.writeSettingsPageAvailable ->
+                        getString(R.string.car_hotspot_grant_page_missing)
+                    else ->
+                        getString(R.string.car_hotspot_needs_modify_system_settings)
+                },
+                14,
+                MUTED,
+            ),
+        )
+        if (
+            capability.reachable &&
+            !capability.writeSettingsGranted &&
+            capability.writeSettingsPageAvailable
+        ) {
+            card.addView(
+                button(getString(R.string.grant_modify_system_settings), false) { openWriteSettingsPage() },
+                matchButton(12, 60),
+            )
+        }
+    }
+
+    private fun openWriteSettingsPage() {
+        val intent = CarHotspotEnabler.writeSettingsIntent(this, packageName)
+        if (intent == null || runCatching { startActivity(intent) }.isFailure) {
+            Toast.makeText(this, R.string.car_hotspot_grant_page_missing, Toast.LENGTH_LONG).show()
         }
     }
 
@@ -354,6 +399,8 @@ class DiPlayActivity : ComponentActivity() {
         section(content, getString(R.string.automatic_connection), R.drawable.ic_dp_automation) { card ->
             toggle(card, getString(R.string.connect_when_diplay_opens), getString(R.string.use_your_last_connection_type_and_selected_iphone), DiPlayPreferences.autoConnect(this)) { DiPlayPreferences.saveAutoConnect(this, it) }
             toggle(card, getString(R.string.open_after_the_car_starts), getString(R.string.availability_depends_on_your_head_unit_s_startup_settings), AirPlayPersistence.loadAutoStartOnBoot(this)) { AirPlayPersistence.saveAutoStartOnBoot(this, it) }
+            toggle(card, getString(R.string.auto_enable_car_hotspot), getString(R.string.turn_the_car_hotspot_on_before_connecting), AirPlayPersistence.loadAutoEnableCarHotspot(this)) { AirPlayPersistence.saveAutoEnableCarHotspot(this, it) }
+            addCarHotspotPermissionRow(card)
             card.addView(button("${getString(R.string.choose_iphone_prefix)}${DiPlayPreferences.phoneName(this)}", false) { choosePhone() }, matchButton(12, 60))
         }
         section(content, getString(R.string.display_and_performance), R.drawable.ic_dp_display) { card ->

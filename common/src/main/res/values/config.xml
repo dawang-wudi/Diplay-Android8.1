@@ -1,4 +1,5 @@
 <resources>
     <bool name="config_advanced_audio_channel_mapping">false</bool>
     <bool name="config_siri_uses_navigation">false</bool>
+    <bool name="config_auto_enable_car_hotspot">false</bool>
 </resources>

@@ -74,6 +74,7 @@ import com.shilapi.xcertplay.location.AndroidCarPlayLocationProvider
 import com.shilapi.xcertplay.media.AndroidMediaSink
 import com.shilapi.xcertplay.media.CarPlayTouchMapper
 import com.shilapi.xcertplay.media.CarPlayVideoLayout
+import com.shilapi.xcertplay.network.CarHotspotEnabler
 import com.shilapi.xcertplay.network.CarPlayVpnService
 import com.shilapi.xcertplay.orchestration.CarPlayController
 import com.shilapi.xcertplay.orchestration.CarPlayRuntimeConfig
@@ -166,6 +167,7 @@ class CarPlayHostActivity : ComponentActivity() {
         wirelessBluetoothDeviceAddress = DiPlayPreferences.phoneAddress(this),
         transport = if (wirelessEnabled) CarPlayTransport.WIRELESS else CarPlayTransport.WIRED,
         wirelessHotspotMode = wirelessHotspotMode,
+        autoEnableCarHotspot = autoEnableCarHotspot,
         manualHotspotSsid = manualHotspotSsid,
         manualHotspotPassphrase = manualHotspotPassphrase,
         manualHotspotBand = manualHotspotBand,
@@ -352,6 +354,10 @@ class CarPlayHostActivity : ComponentActivity() {
     private var remoteMfiToken = ""
     private var wirelessPermissionsReady = false
     private var wirelessHotspotMode = WirelessHotspotMode.WIFI_P2P
+    private var autoEnableCarHotspot = false
+    private var autoEnableCarHotspotSection: View? = null
+    private var carHotspotCapabilityView: TextView? = null
+    private var carHotspotGrantButton: Button? = null
     private var manualHotspotSsid = ""
     private var existingWifiSsid = ""
     private var existingWifiPassphrase = ""
@@ -570,6 +576,7 @@ class CarPlayHostActivity : ComponentActivity() {
         remoteMfiServer = AirPlayPersistence.loadRemoteMfiServer(this)
         remoteMfiToken = AirPlayPersistence.loadRemoteMfiToken(this)
         wirelessHotspotMode = AirPlayPersistence.loadWirelessHotspotMode(this)
+        autoEnableCarHotspot = AirPlayPersistence.loadAutoEnableCarHotspot(this)
         existingWifiSsid = AirPlayPersistence.loadExistingWifiSsid(this)
         existingWifiPassphrase = AirPlayPersistence.loadExistingWifiPassphrase(this)
         manualHotspotSsid = AirPlayPersistence.loadManualHotspotSsid(this)
@@ -730,6 +737,7 @@ class CarPlayHostActivity : ComponentActivity() {
             requestLocationPermission()
         }
         wirelessPermissionsReady = !wirelessEnabled || hasRequiredWirelessPermissions()
+        updateCarHotspotCapabilityBlock()
         advancedAudioChannelMapping =
             advancedAudioChannelMappingSupported &&
                 AirPlayPersistence.loadAdvancedAudioChannelMapping(this)
@@ -1306,6 +1314,14 @@ class CarPlayHostActivity : ComponentActivity() {
         )
 
         content.addView(
+            buildAutoEnableCarHotspotSection(),
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+            ).apply { topMargin = dp(18) },
+        )
+
+        content.addView(
             settingsCategoryHeader(getString(R.string.location)),
             LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -1822,6 +1838,7 @@ class CarPlayHostActivity : ComponentActivity() {
         AirPlayPersistence.saveRemoteMfiServer(this, remoteMfiServer)
         AirPlayPersistence.saveRemoteMfiToken(this, remoteMfiToken)
         AirPlayPersistence.saveWirelessHotspotMode(this, wirelessHotspotMode)
+        AirPlayPersistence.saveAutoEnableCarHotspot(this, autoEnableCarHotspot)
         AirPlayPersistence.saveExistingWifiCredentials(this, existingWifiSsid, existingWifiPassphrase)
         AirPlayPersistence.saveManualHotspotSsid(this, manualHotspotSsid)
         AirPlayPersistence.saveManualHotspotPassphrase(this, manualHotspotPassphrase)
@@ -2826,11 +2843,120 @@ class CarPlayHostActivity : ComponentActivity() {
         return section
     }
 
+    /**
+     * Offers to turn the head unit's own hotspot on from DiPlay.
+     *
+     * Android reserves this for system apps unless the firmware leaves the ordinary
+     * WRITE_SETTINGS gate in place, so the line under the switch reports what this firmware is
+     * expected to require. A refusal is then explained here instead of only appearing in the log.
+     */
+    private fun buildAutoEnableCarHotspotSection(): View {
+        val section = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+        }
+        section.addView(
+            settingsSwitchRow(
+                label = getString(R.string.auto_enable_car_hotspot),
+                checked = autoEnableCarHotspot,
+                description = getString(R.string.turn_the_car_hotspot_on_before_connecting),
+            ) { checked ->
+                autoEnableCarHotspot = checked
+                appendLog(
+                    "Car hotspot auto-enable ${if (checked) "enabled" else "disabled"}; " +
+                        "applies when settings close",
+                )
+                updateCarHotspotCapabilityBlock()
+            },
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+            ),
+        )
+
+        val capability = menuText("", 14f, MENU_SECONDARY)
+        carHotspotCapabilityView = capability
+        section.addView(
+            capability,
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+            ).apply { topMargin = dp(8) },
+        )
+
+        val grant = Button(this).apply {
+            text = getString(R.string.grant_modify_system_settings)
+            isAllCaps = false
+            textSize = 15f
+            setOnClickListener { openWriteSettingsPage() }
+        }
+        carHotspotGrantButton = grant
+        section.addView(
+            grant,
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+            ).apply { topMargin = dp(8) },
+        )
+
+        updateCarHotspotCapabilityBlock()
+        // The manual-hotspot fields are updated when buildHotspotModeSection() runs, which is
+        // before this section exists, so set the initial visibility here.
+        section.visibility = if (wirelessHotspotMode == WirelessHotspotMode.MANUAL) {
+            View.VISIBLE
+        } else {
+            View.GONE
+        }
+        autoEnableCarHotspotSection = section
+        return section
+    }
+
+    /**
+     * Reports the expected permission gate. Reading it costs a resource lookup and two framework
+     * calls, so it is repeated whenever the menu is opened or resumed rather than cached across
+     * the user's trip to the Settings app.
+     */
+    private fun updateCarHotspotCapabilityBlock() {
+        val view = carHotspotCapabilityView ?: return
+        val capability = CarHotspotEnabler.capability(this)
+        view.text = when {
+            capability.provisioningAppConfigured == true ->
+                getString(R.string.car_hotspot_needs_system_permission)
+            capability.writeSettingsGranted ->
+                getString(R.string.car_hotspot_ready_to_turn_on)
+            !capability.writeSettingsPageAvailable ->
+                getString(R.string.car_hotspot_grant_page_missing)
+            else ->
+                getString(R.string.car_hotspot_needs_modify_system_settings)
+        }
+        carHotspotGrantButton?.visibility = if (
+            capability.reachable &&
+            !capability.writeSettingsGranted &&
+            capability.writeSettingsPageAvailable
+        ) {
+            View.VISIBLE
+        } else {
+            View.GONE
+        }
+    }
+
+    private fun openWriteSettingsPage() {
+        val intent = CarHotspotEnabler.writeSettingsIntent(this, packageName)
+        if (intent == null) {
+            appendLog("This firmware has no Modify system settings page")
+            return
+        }
+        runCatching { startActivity(intent) }
+            .onFailure {
+                appendLog("Could not open Modify system settings: ${it.javaClass.simpleName}")
+            }
+    }
+
     private fun updateManualHotspotFields() {
         existingWifiFields?.visibility = if (wirelessHotspotMode == WirelessHotspotMode.EXISTING_WIFI) View.VISIBLE else View.GONE
         existingWifiErrorView?.visibility = View.GONE
         val visible = wirelessHotspotMode == WirelessHotspotMode.MANUAL
         manualHotspotFields?.visibility = if (visible) View.VISIBLE else View.GONE
+        autoEnableCarHotspotSection?.visibility = if (visible) View.VISIBLE else View.GONE
         if (!visible) manualHotspotErrorView?.visibility = View.GONE
     }
 

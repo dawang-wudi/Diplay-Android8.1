@@ -17,7 +17,7 @@ android {
         applicationId = "com.shihab.diplay"
         minSdk = 27
         targetSdk = 37
-        versionCode = 44
+        versionCode = 45
         versionName = "0.2.10"
         ndk {
             abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
@@ -42,8 +42,10 @@ android {
 
     buildTypes {
         debug {
-            applicationIdSuffix = ".ora81"
-            versionNameSuffix = "-android81-test15-wifi-direct-universal"
+            // Distinct from the released `.ora81` package so a locally built APK installs next to
+            // the released one instead of failing on the signing key mismatch.
+            applicationIdSuffix = ".wudi81v15"
+            versionNameSuffix = "-android81-test15-hotspot-universal"
         }
         release {
             optimization {

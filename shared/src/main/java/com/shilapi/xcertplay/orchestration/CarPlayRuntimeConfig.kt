@@ -57,6 +57,11 @@ class CarPlayRuntimeConfig(
     val hostName: String = "xcertplay",
     val transport: CarPlayTransport = CarPlayTransport.WIRED,
     val wirelessHotspotMode: WirelessHotspotMode = WirelessHotspotMode.WIFI_P2P,
+    /**
+     * Turns the head unit's own hotspot on before the manual hotspot wait, for firmware that does
+     * not start it by itself. Only the manual hotspot mode uses it.
+     */
+    val autoEnableCarHotspot: Boolean = false,
     val manualHotspotSsid: String? = null,
     val manualHotspotPassphrase: String? = null,
     val manualHotspotBand: ManualHotspotBand = ManualHotspotBand.AUTO,

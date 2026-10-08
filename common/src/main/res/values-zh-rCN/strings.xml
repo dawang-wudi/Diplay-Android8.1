@@ -496,6 +496,13 @@
     <string name="settings_gesture_fingers_option">%1$d 指</string>
     <string name="settings_gesture_fingers_hint">选择车机未占用的手势。如果三指下滑会打开系统面板，请改用两指或四指。</string>
     <string name="waiting_for_car_hotspot">正在等待车机热点启动，就绪后将自动连接…</string>
+    <string name="auto_enable_car_hotspot">自动开启车机热点</string>
+    <string name="turn_the_car_hotspot_on_before_connecting">连接前由 DiPlay 打开车机自带热点。多数固件还需要“修改系统设置”权限。</string>
+    <string name="grant_modify_system_settings">授予“修改系统设置”权限</string>
+    <string name="car_hotspot_needs_system_permission">该固件把网络共享保留给系统应用，DiPlay 无法打开热点</string>
+    <string name="car_hotspot_ready_to_turn_on">已授予“修改系统设置”，DiPlay 可以打开热点</string>
+    <string name="car_hotspot_needs_modify_system_settings">尚未授予“修改系统设置”，授权一次后重新连接</string>
+    <string name="car_hotspot_grant_page_missing">该固件没有“修改系统设置”页面，请手动打开热点或使用 ADB</string>
     <string name="car_hotspot_startup_hint">热点尚未就绪；连接时会自动等待车机完成启动。</string>
     <string name="car_hotspot_wait_timeout">车机热点尚未就绪，将自动重试；请确认热点已开启。</string>
     <string name="hotspot_network_not_ready">热点网络未就绪</string>

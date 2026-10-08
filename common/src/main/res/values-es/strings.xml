@@ -497,6 +497,13 @@
     <string name="settings_gesture_fingers_option">%1$d dedos</string>
     <string name="settings_gesture_fingers_hint">Elige un gesto libre. Si tres dedos abren un panel del sistema, usa dos o cuatro.</string>
     <string name="waiting_for_car_hotspot">Esperando a que se inicie el punto de acceso del coche… La conexión continuará automáticamente.</string>
+    <string name="auto_enable_car_hotspot">Activar el punto de acceso del coche</string>
+    <string name="turn_the_car_hotspot_on_before_connecting">DiPlay activa el punto de acceso del coche antes de conectar. La mayoría del firmware también requiere Modificar ajustes del sistema.</string>
+    <string name="grant_modify_system_settings">Conceder Modificar ajustes del sistema</string>
+    <string name="car_hotspot_needs_system_permission">Este firmware reserva la conexión compartida a una app del sistema, así que DiPlay no puede activar el punto de acceso</string>
+    <string name="car_hotspot_ready_to_turn_on">Modificar ajustes del sistema está concedido; DiPlay puede activar el punto de acceso</string>
+    <string name="car_hotspot_needs_modify_system_settings">Modificar ajustes del sistema aún no está concedido; concédelo una vez y vuelve a conectar</string>
+    <string name="car_hotspot_grant_page_missing">Este firmware no tiene la página Modificar ajustes del sistema; activa el punto de acceso manualmente o usa ADB</string>
     <string name="car_hotspot_startup_hint">El punto de acceso aún no está listo. La conexión esperará a que el coche termine de iniciarlo.</string>
     <string name="car_hotspot_wait_timeout">El punto de acceso del coche no está listo. Se reintentará automáticamente; comprueba que esté activado.</string>
     <string name="hotspot_network_not_ready">La red del punto de acceso no está lista</string>

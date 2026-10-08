@@ -80,6 +80,7 @@ object AirPlayPersistence {
     private const val KEY_SAFE_AREA_DRAW_OUTSIDE = "safe_area_draw_outside"
     private const val KEY_ADAPT_PIP_RESOLUTION = "adapt_pip_resolution"
     private const val KEY_AUTO_START_ON_BOOT = "auto_start_on_boot"
+    private const val KEY_AUTO_ENABLE_CAR_HOTSPOT = "auto_enable_car_hotspot"
     private const val KEY_LOCATION_REPORTING_ENABLED = "location_reporting_enabled"
     private const val KEY_MFI_TARGET = "mfi_target"
     private const val KEY_MFI_I2C_PATH = "mfi_i2c_path"
@@ -401,6 +402,24 @@ object AirPlayPersistence {
     fun saveAutoStartOnBoot(context: Context, enabled: Boolean) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
             .putBoolean(KEY_AUTO_START_ON_BOOT, enabled)
+            .apply()
+    }
+
+    /**
+     * Whether a wireless session should turn the head unit's own hotspot on before waiting for it.
+     *
+     * Builds whose firmware starts the hotspot by itself keep the base default of false; the mobile
+     * build overrides `config_auto_enable_car_hotspot`. A saved choice always wins.
+     */
+    fun loadAutoEnableCarHotspot(context: Context): Boolean =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(
+            KEY_AUTO_ENABLE_CAR_HOTSPOT,
+            context.resources.getBoolean(R.bool.config_auto_enable_car_hotspot),
+        )
+
+    fun saveAutoEnableCarHotspot(context: Context, enabled: Boolean) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putBoolean(KEY_AUTO_ENABLE_CAR_HOTSPOT, enabled)
             .apply()
     }
 
