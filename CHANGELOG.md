@@ -1,3 +1,24 @@
+# wudi81 v18 — 2026-10-12
+
+以上游 `main`（0.2.18 + 未发布的音频修复）为基线重建，并加入两项上游没有的功能。
+
+- **自动开启车机热点**：上游的实现被限定为比亚迪车机 + 本地 ADB 授权，本版放开到任意固件——
+  非比亚迪固件走系统设置页手动授予 `WRITE_SETTINGS`。开热点本身的实现仍用上游那套。
+  另外把「等车机自己的热点」的预算从与开热点共用的 15 秒拆出来，单独给 60 秒，
+  避免慢固件被开热点那步挤掉。
+- **使用 iPhone 的麦克风**（实验性，默认关闭）：让 DiPlay 在 AirPlay `/info` 里省略
+  `audioInputFormats`，把麦克风输入交还给 iPhone。车机没有麦克风时用。
+  **iOS 是否真的回退到手机麦克风尚未验证。**
+- 包名 `com.shihab.diplay.wudi81v18`（versionCode 47），与上游 `com.shihab.diplay` 可共存。
+- README 改为中文，移除英文版与重复的中文副本。
+
+基线取 `main` 而不是 `v0.2.18` 标签，是因为 0.2.18 引入了 issue #649：解码器输入等待放宽到
+0.5 秒后，慢解码器会越落越远，屏幕在后台时音乐每几秒欠载一次。修复提交 `7d974f42`
+把上限设为 100 毫秒，尚未发布。
+
+实车验证（`alps F9212A` / MT8227L，Android 8.1 / API 27，iPhone 14 Pro）：无线 CarPlay 与
+自动开启车机热点均已确认可用。详见 [README](README.md)。
+
 # DiPlay 0.2.18 — 2026-10-11
 
 - Keep wired sessions running when a USB read finishes as DiPlay stops waiting for it, start wired CarPlay on Android 7.1 head units, when a head-unit USB audio driver holds the iPhone, and without a VPN dialog over approved network ADB (#625, #614, #618).
