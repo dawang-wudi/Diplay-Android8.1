@@ -59,7 +59,6 @@ class CarPlayPlaybackStatusTest {
                 durationMillis = 257_000,
                 elapsedMillis = 12_500,
                 playing = true,
-                playbackStatusKnown = true,
             ),
             status.acceptUpdate(update {
                 group(1) {
@@ -85,20 +84,6 @@ class CarPlayPlaybackStatusTest {
 
         assertNull(updated?.title)
         assertEquals(0x81, updated?.artworkTransferId)
-        assertEquals(CarPlayNowPlaying(), status.clearAll())
-    }
-
-    @Test
-    fun titleAndElapsedTimeDoNotPretendThePhoneExplicitlyPaused() {
-        val status = CarPlayPlaybackStatus()
-        val title = status.acceptUpdate(update { group(0) { string(1, "Song") } })!!
-        assertEquals(false, title.playbackStatusKnown)
-        val progress = status.acceptUpdate(update { group(1) { u32(1, 1200) } })!!
-        assertEquals(false, progress.playbackStatusKnown)
-        val paused = status.acceptUpdate(update { group(1) { u8(0, 2) } })!!
-        assertEquals(true, paused.playbackStatusKnown)
-        assertEquals(false, paused.playing)
-        assertEquals(true, status.acceptUpdate(update { group(0) { string(1, "Next") } })!!.playbackStatusKnown)
         assertEquals(CarPlayNowPlaying(), status.clearAll())
     }
 }

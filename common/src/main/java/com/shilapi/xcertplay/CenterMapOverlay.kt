@@ -6,6 +6,7 @@ import android.graphics.Color
 import android.graphics.Outline
 import android.graphics.PixelFormat
 import android.graphics.SurfaceTexture
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
@@ -70,22 +71,34 @@ internal object CenterMapOverlay {
         onTap: () -> Unit,
     ): Boolean {
         if (root != null) return true
+        if (!aspect.isFinite() || aspect <= 0) return false
         if (!permitted(context)) return false
         val windows = context.getSystemService(WindowManager::class.java) ?: return false
         val metrics = context.resources.displayMetrics
         val screenWidth = metrics.widthPixels
         val screenHeight = metrics.heightPixels
         // The widest card that still fits the screen height; the stream itself is 1600x600.
-        val maxWidth = minOf(screenWidth, (screenHeight * aspect).toInt())
-        val minWidth = (screenWidth * MIN_WIDTH_FRACTION).toInt()
+        if (screenWidth <= 0 || screenHeight <= 0) return false
+        val maxWidth = minOf(screenWidth, (screenHeight * aspect).toInt()).coerceAtLeast(1)
+        val minWidth = (screenWidth * MIN_WIDTH_FRACTION).toInt().coerceIn(1, maxWidth)
         val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-        val width = prefs.getInt(KEY_WIDTH, (screenWidth * WIDTH_FRACTION).toInt()).coerceIn(minWidth, maxWidth)
+        val hasSavedAspect = prefs.contains(KEY_ASPECT)
+        val savedAspect = if (hasSavedAspect) java.lang.Double.longBitsToDouble(prefs.getLong(KEY_ASPECT, 0L)) else aspect
+        val initialWidth = if (hasSavedAspect && kotlin.math.abs(savedAspect - aspect) > 0.1) {
+            (screenWidth * WIDTH_FRACTION).toInt().coerceIn(minWidth, maxWidth)
+        } else {
+            prefs.getInt(KEY_WIDTH, (screenWidth * WIDTH_FRACTION).toInt()).coerceIn(minWidth, maxWidth)
+        }
+        val width = initialWidth
+        prefs.edit().putInt(KEY_WIDTH, width)
+            .putLong(KEY_ASPECT, java.lang.Double.doubleToRawLongBits(aspect)).apply()
         val height = (width / aspect).toInt()
         val radius = 24f * metrics.density / 2
         val params = WindowManager.LayoutParams(
             width,
             height,
-            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+            else @Suppress("DEPRECATION") WindowManager.LayoutParams.TYPE_PHONE,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS or
                 WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED, // the TextureView needs it
             PixelFormat.TRANSLUCENT,
@@ -218,7 +231,8 @@ internal object CenterMapOverlay {
                 }
                 MotionEvent.ACTION_UP -> when {
                     pinched || dragging -> {
-                        prefs.edit().putInt(KEY_X, params.x).putInt(KEY_Y, params.y).putInt(KEY_WIDTH, params.width).apply()
+                        prefs.edit().putInt(KEY_X, params.x).putInt(KEY_Y, params.y).putInt(KEY_WIDTH, params.width)
+                            .putLong(KEY_ASPECT, java.lang.Double.doubleToRawLongBits(aspect)).apply()
                         if (pinched) Log.i(TAG, "card resized ${params.width}x${params.height}")
                     }
                     else -> onTap()
@@ -256,4 +270,5 @@ internal object CenterMapOverlay {
     private const val KEY_X = "x"
     private const val KEY_Y = "y"
     private const val KEY_WIDTH = "width"
+    private const val KEY_ASPECT = "aspect"
 }

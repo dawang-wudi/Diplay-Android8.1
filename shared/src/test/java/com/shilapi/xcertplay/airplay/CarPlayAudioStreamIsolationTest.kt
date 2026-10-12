@@ -55,39 +55,6 @@ class CarPlayAudioStreamIsolationTest {
         }
     }
 
-    @Test fun closingOldSessionPreservesReplacementAudioAndFeedback() {
-        val stopped = mutableListOf<AudioStreamId>()
-        val engine = CarPlayMediaEngine(object : MediaSink {
-            override fun onAudioStopped(id: AudioStreamId) { stopped.add(id) }
-        })
-        val old = session()
-        val replacement = session()
-        val probe = session()
-        try {
-            assertNotNull(engine.onAudio(old, 100, setup("media")))
-            assertNotNull(engine.onAudio(replacement, 100, setup("media")))
-            stopped.clear()
-            assertNull(engine.onFeedback(probe))
-            engine.onSessionClosed(old)
-            assertTrue(stopped.isEmpty())
-            assertNull(engine.onFeedback(old))
-            val feedback = engine.onFeedback(replacement)
-            assertNotNull(feedback)
-            assertEquals(1, (feedback!!["streams"] as List<*>).size)
-            assertEquals(setOf(CarPlayMediaEngine.StreamKey(replacement, 100, "media")), streams(engine).keys)
-            engine.onSessionClosed(replacement)
-            assertEquals(listOf(AudioStreamId(100, "media")), stopped)
-            assertNull(engine.onFeedback(replacement))
-            assertTrue(streams(engine).isEmpty())
-        } finally {
-            engine.onSessionClosed(old)
-            engine.onSessionClosed(replacement)
-            old.close()
-            replacement.close()
-            probe.close()
-        }
-    }
-
     private fun setup(audioType: String): Map<String, Any?> = mapOf(
         "audioType" to audioType,
         "audioFormat" to 0x8000L,

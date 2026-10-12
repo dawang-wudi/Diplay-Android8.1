@@ -2,6 +2,7 @@ package com.shilapi.xcertplay
 
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.Color
 import android.media.MediaMetadata
 import android.view.KeyEvent
 import com.shilapi.xcertplay.airplay.CarPlayMediaButton
@@ -14,9 +15,10 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
+import org.robolectric.annotation.GraphicsMode
 
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [27, 29], manifest = Config.NONE)
+@Config(sdk = [29], manifest = Config.NONE)
 class CarPlayMediaCallbackTest {
     private val sent = mutableListOf<Int>()
     private val callback = CarPlayMediaCallback { index, _ -> sent += index }
@@ -35,30 +37,26 @@ class CarPlayMediaCallbackTest {
     }
 
     @Test
-    fun aRepeatedPlayCommandCannotTurnPlayingMusicIntoPause() {
-        var playing = false
-        val receiver = CarPlayMediaCallback { index, _ ->
-            playing = when (index) {
-                CarPlayMediaButton.PLAY -> true
-                CarPlayMediaButton.PAUSE -> false
-                CarPlayMediaButton.PLAY_PAUSE -> !playing
-                else -> playing
-            }
-        }
-        receiver.onPlay()
-        receiver.onMediaButtonEvent(button(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_PLAY)))
-        org.junit.Assert.assertTrue("A car's PLAY echo must keep music playing", playing)
-        receiver.onMediaButtonEvent(button(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_PLAY)))
-        org.junit.Assert.assertTrue("Repeated PLAY commands must remain idempotent", playing)
-    }
-
-    @Test
-    fun explicitHardwareCommandsKeepTheirIntentAndVendorToggleStillToggles() {
+    fun hardwarePlayAndPauseKeysToggle() {
         press(KeyEvent.KEYCODE_MEDIA_PLAY)
         press(KeyEvent.KEYCODE_MEDIA_PAUSE)
         press(CarPlayMediaButton.KEYCODE_BYD_AUTO_MEDIA_PLAY_PAUSE)
 
-        assertEquals(listOf(CarPlayMediaButton.PLAY, CarPlayMediaButton.PAUSE, CarPlayMediaButton.PLAY_PAUSE), sent)
+        assertEquals(List(3) { CarPlayMediaButton.PLAY_PAUSE }, sent)
+    }
+
+    @Test fun experimentalPlayPauseKeyNeedsOptInAndStopsAfterDisable() {
+        var enabled = false
+        val experimental = CarPlayMediaCallback(experimentalDiLink3Keys = { enabled }) { index, _ -> sent += index }
+        val key = button(KeyEvent(0, 0, KeyEvent.ACTION_DOWN, 331, 0))
+        experimental.onMediaButtonEvent(key)
+        assertEquals(emptyList<Int>(), sent)
+        enabled = true
+        experimental.onMediaButtonEvent(key)
+        assertEquals(listOf(CarPlayMediaButton.PLAY_PAUSE), sent)
+        enabled = false
+        experimental.onMediaButtonEvent(key)
+        assertEquals(listOf(CarPlayMediaButton.PLAY_PAUSE), sent)
     }
 
     @Test
@@ -106,6 +104,38 @@ class CarPlayMediaCallbackTest {
     }
 
     @Test
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    fun wideArtworkIsPaddedToASquareNotStretched() {
+        val wide = Bitmap.createBitmap(1280, 720, Bitmap.Config.ARGB_8888).apply { eraseColor(Color.RED) }
+        val square = Bitmap.createBitmap(200, 200, Bitmap.Config.ARGB_8888)
+
+        val padded = CarPlayMediaKeys.squareArtwork(wide)
+
+        assertEquals(384, padded.width)
+        assertEquals(384, padded.height)
+        assertEquals(Color.TRANSPARENT, padded.getPixel(192, 0))
+        assertEquals(Color.RED, padded.getPixel(192, 192))
+        assertEquals(Color.TRANSPARENT, padded.getPixel(192, 383))
+        assertSame(square, CarPlayMediaKeys.squareArtwork(square))
+    }
+
+    @Test
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    fun smallOrTallArtworkIsPaddedWithoutUpscaling() {
+        val small = CarPlayMediaKeys.squareArtwork(Bitmap.createBitmap(200, 100, Bitmap.Config.ARGB_8888))
+        val tall = CarPlayMediaKeys.squareArtwork(
+            Bitmap.createBitmap(100, 1000, Bitmap.Config.ARGB_8888).apply { eraseColor(Color.RED) },
+        )
+
+        assertEquals(200, small.width)
+        assertEquals(200, small.height)
+        assertEquals(384, tall.width)
+        assertEquals(384, tall.height)
+        assertEquals(Color.TRANSPARENT, tall.getPixel(0, 192))
+        assertEquals(Color.RED, tall.getPixel(192, 192))
+    }
+
+    @Test
     fun thePlaceholderRastersAtArtworkSize() {
         val placeholder = CarPlayMediaKeys.placeholderArt(RuntimeEnvironment.getApplication())
 
@@ -126,7 +156,6 @@ class CarPlayMediaCallbackTest {
         val song = CarPlayNowPlaying(title = "Song", artist = "Artist", artworkTransferId = 7, elapsedMillis = 1_000, playing = true)
         assertEquals(false, CarPlayMediaKeys.metadataChanged(song, song.copy(elapsedMillis = 1_450)))
         assertEquals(false, CarPlayMediaKeys.metadataChanged(song, song.copy(playing = false)))
-        assertEquals(false, CarPlayMediaKeys.metadataChanged(song, song.copy(playbackStatusKnown = true)))
         assertEquals(true, CarPlayMediaKeys.metadataChanged(song, song.copy(title = "Next")))
         assertEquals(true, CarPlayMediaKeys.metadataChanged(song, song.copy(artworkTransferId = 8)))
         assertEquals(true, CarPlayMediaKeys.metadataChanged(CarPlayNowPlaying(), song))

@@ -1,37 +1,120 @@
-# wudi81 v16 — 2026-10-08
+# DiPlay 0.2.18 — 2026-10-11
 
-在同一分支上增加「使用 iPhone 的麦克风」，versionCode 46。包名不变，可直接覆盖 v45 并保留设置。
+- Keep wired sessions running when a USB read finishes as DiPlay stops waiting for it, start wired CarPlay on Android 7.1 head units, when a head-unit USB audio driver holds the iPhone, and without a VPN dialog over approved network ADB (#625, #614, #618).
+- Stop discarding music packets after a 10 ms wait, and log the /feedback position against the received audio (#618, #625).
+- Show the real connection stage in every app language, stop with a clear cause when a head unit's Bluetooth cannot reach the iPhone, and find the connected iPhone through sink-role Bluetooth profiles (#624, #590, #585).
+- Wheel next/previous on the CarPlay screen without the wheel-key service, Geely/Lynk `geely_fx11` wheel keys and Siri, wheel-key service restore retries, and next/previous to answer or decline with CarPlay call keys (#600, #626, #622, #625).
+- Settings backup and restore from a phone, an installer choice for updates, and About inside Settings (#598, #593, #597).
+- Experimental, off-by-default options: Harman full screen with 32-bit x86 libraries, square corners, clearer navigation voice over USB, MediaTek low-latency decoding, a media-key audio focus opt-out, car phone audio for calls, a cluster speedometer and FCE cluster guidance (#613, #596, #622, #608, #615, #595, #607, #599).
 
-- **新增：使用 iPhone 的麦克风。** 车机没有麦克风时，让通话和 Siri 改用 iPhone 自己的麦克风。
-  实现方式是**在 AirPlay `/info` 响应里省略 `audioInputFormats`**，即告知 iPhone 本接收端
-  不提供音频输入；同时不再启动本地麦克风采集。
-- 新增设置项「使用 iPhone 的麦克风」，位于 DiPlay 主设置页与 CarPlay 主机设置页的音频分区。
-  **默认关闭**——有麦克风的车机应继续使用车机麦克风（离驾驶员更近）。
-- 该开关只是协议层面的能力声明，**iOS 是否真的回退到 iPhone 麦克风尚未实车验证**。
-  已在文档中标注为实验性。
-- 保留 v15 的自动开启车机热点与全部上游功能。
+See [0.2.18 release notes](docs/RELEASE-NOTES-0.2.18.md) for contribution links and limits, and [validation](docs/VALIDATION.md) for checks. Full-release vehicle acceptance is not claimed.
 
-# wudi81 v15 — 2026-10-08
+# DiPlay 0.2.17 — 2026-10-10
 
-基于上游 [hiscatwang/DiPlay](https://github.com/hiscatwang/DiPlay) `android81-universal`
-分支的 v15 通用版（versionCode 44），在其上增加自动开启车机热点，versionCode 45。
+- Keep wired sessions running after a damaged NCM block, retry identification without unsupported CarPlay messages for older iOS, recognize the Android 10+ and Chinese USB permission prompts, explain refused wired mode switches and retry NCM interface claims (#575).
+- Add an iPhone charging choice for wired USB: Normal 2.4 A, Reduced 1.5 A or Low 0.5 A (#583).
+- Recommend the built-in car hotspot, and pause the car's Wi-Fi network search during Wi-Fi Direct on Android 7.1 and later when network ADB is approved (#570).
+- Record the head-unit microphone for app voice notes and clock Opus 16 kHz microphone packets at 16 kHz (#548, #547).
+- Check daily for updates with an Update available notice, recognize the DiLink generation from the controller version, and save Android 9 reports to Download/DiPlay (#488, #531, #541).
+- Add album-cover ambient lighting and fix saving ambient settings on hotfix firmware; add experimental BYD call popup hiding and external controller keys (#537, #550, #539, #549).
 
-- **新增：自动开启车机自带热点。** 连接前调用 `IConnectivityManager.startTethering` 打开车机热点，
-  不再依赖用户每次上车手动开启。不读取也不修改已保存的热点 SSID / 密码。
-- 新增固件权限门槛探测：读取 `config_mobile_hotspot_provision_app` 判断本机需要
-  `WRITE_SETTINGS` app-op 还是无法获取的签名权限 `TETHER_PRIVILEGED`，
-  并在设置页显示结论、提供一键跳转授权入口。
-- 新增设置项「自动开启车机热点」（DiPlay 主设置页与 CarPlay 主机设置页各一处），默认开启。
-- 声明 `WRITE_SETTINGS` 权限，使应用出现在「特殊访问 → 修改系统设置」列表中。
-- 包名改为 `com.shihab.diplay.wudi81v15`，与上游发布的 `com.shihab.diplay.ora81` 共存。
-- 自动开启热点为尽力而为：拒绝、超时或不支持均只记录日志，不中断 CarPlay 连接，
-  仍回退到上游原有的热点等待与重试逻辑。
-- 完整继承上游 v15：Android 8.1 / 9 的 Wi-Fi Direct 兼容、v14 的同一 Wi-Fi／局域网模式与
-  有界启动恢复、v12 及更早的音频与显示适配。
+See [0.2.17 release notes](docs/RELEASE-NOTES-0.2.17.md) for contribution links and limits, and [validation](docs/VALIDATION.md) for checks. Full-release vehicle acceptance is not claimed.
 
-车主已在 `alps F9212A`（`ac8227l`，ARM，Android 9.1 / API 27，1024×600）上确认无线 CarPlay
-可连接。自动开启热点的端到端效果待授予「修改系统设置」权限后实车确认。
-详见[本版更新说明](docs/WUDI81_V15.md)。
+# DiPlay 0.2.16 — 2026-10-09
+
+- Send the Siri and call microphone on Android 7.1–9 head units without an Opus encoder through a bundled software Opus encoder, and offer Opus only when it can be encoded; accepted on a BOS Mini A1 (Android 9) with an iPhone 12 on iOS 27 (#468, #483).
+- Fix wired NCM receive framing and Android 8 USB reads, and retry rejected large USB reads at smaller sizes (#478, #495).
+- Refresh hotspot addresses after a first wireless timeout, request Android 17 local-network permission, handle missing VPN authorization screens and add WPA3 car-hotspot security (#474, #465, #517, #501).
+- Add experimental Low-latency decoding and Direct video output, an FPS counter, a hardware low-latency Smooth video decoder and bounded video backlog recovery (#496, #456, #347).
+- Add inline Settings search, confirm before the quick menu discards staged changes, allow turning off the swipe-down gesture, and refine Settings layout and reconnect prompts (#450, #500, #487, #486, #482, #490, #491).
+- Place the dashboard car marker with 1% sliders, give the small-window turn card its own placement, theme the cluster waiting screen, show the full DiLink 3 arrival time, declare initial appearance and add side-panel resizing (#494, #493, #481, #458, #346, #480).
+- Add experimental, off-by-default car Bluetooth pause, music-following ambient lighting, navigation wheel volume and a Platform 21 instrument route; refine call echo alignment, buffered-audio pacing and audio diagnostics (#307, #345, #344, #348, #421, #484, #499).
+
+See [0.2.16 release notes](docs/RELEASE-NOTES-0.2.16.md) for contribution links and limits, and [validation](docs/VALIDATION.md) for checks. Full-release vehicle acceptance is not claimed.
+
+# DiPlay 0.2.15 — 2026-10-08
+
+- Lower the minimum to Android 7.1/API 25 with compatibility fallbacks; Android 7.1–8.1 vehicle validation remains pending (#407).
+- Add the first-launch DiLink setup guide and manual GitHub update checks in About (#416, #413).
+- Add Light/Dark/Auto app appearance and refine compact layouts, fullscreen handling, Language and About navigation (#422, #420).
+- Recover the music prebuffer after underruns, including corrected retained-audio accounting, and supply a main-decoder operating-rate hint with fallback (#401, #417).
+- Add Wi-Fi Direct automatic band choices and optional selected-iPhone Bluetooth launch; experimental Bluetooth audio remains off by default (#432, #439).
+- Correct square-canvas physical dimensions, refine turn-card placement to 1% steps and add optional small-window marker layouts with experimental Auto following (#404, #440, #438).
+- Add explicit experimental ADB boot-start repair and correct Ukrainian wording (#441, #399).
+
+See [0.2.15 release notes](docs/RELEASE-NOTES-0.2.15.md) for contribution links and limits, and [validation](docs/VALIDATION.md) for checks. Full-release vehicle acceptance is not claimed.
+
+# DiPlay 0.2.14 — 2026-10-07
+
+- Group Settings by driver goal with search, adaptive layouts, quick controls and reconnect notices (#369).
+- Add an independent Interface size control, preserving CarPlay geometry and following real density/window changes (#378).
+- Add a default automatic-connection choice, scheduled day/night mode and launcher return to active CarPlay (#373, #365, #376).
+- Improve custom car-button image selection and clarify the main app's source-build instructions (#364, #377, #374).
+- Repair the captured USBMUX diagnostic trailer, wake drained Bluetooth receive queues and retry explicitly rejected large USB reads once at 16 KiB; improve stream diagnostics (#362).
+- Select compatible video output without window hardware acceleration; use Android video decryption when available and retain a fallback (#362, #332).
+- Add default-off experimental Smooth video pacing with explicit latency/picture-adjustment limits (#367).
+- Preserve usable hotspot interface addresses and authenticated Bluetooth control on the observed rendered-session handoff fallback (#394, #396).
+- Add configurable steering-wheel Siri, bounded microphone-source fallback and optional audio-focus handling (#360, #371, #339).
+- Repair BYD call-watcher/audio-status behavior and add opt-in, default-off experimental software call echo cancellation and voice filtering (#370).
+- Preserve artwork proportions, correct system-bar-aware split/rotation geometry and recognize the specifically observed 1280×480 DiLink 3 cluster surface (#375, #389, #388).
+
+See [0.2.14 release notes](docs/RELEASE-NOTES-0.2.14.md) for all 20 contribution links, credits and limitations. Android 9/API 28 remains required. See [validation](docs/VALIDATION.md) for measured checks; complete-release vehicle acceptance is not claimed.
+
+# DiPlay 0.2.13 — 2026-10-06
+
+- Enable the legacy Android 9 Wi-Fi Direct group path with generated credentials and serialized ownership/cleanup; requested frequency remains unverified on Android 9 (#282).
+- Prefer current IPv4 hotspot endpoints, preserve scoped IPv6 fallback, and refine Auto channel priorities beside a 5 GHz station without guaranteeing a band (#283, #309).
+- Avoid unused Android NSD and USB-service dependencies for wireless startup; retain only rendered sessions on the guarded handoff fallback (#313, #300, #258).
+- Add explicit experimental hotspot join Check/Apply/Restore on eligible Android 13+, user-configured 5 GHz hotspots, with complete private recovery state and no automatic mutation (#251).
+- Switch wireless to USB within the host activity, verify requested permissions independently, preserve other accessibility services and cancel stale permission work (#268).
+- Preserve validated USBMUX payload replies with narrow four-byte trailer recovery (#298).
+- Add optional live dock/split-screen areas, square-canvas screen rotation and the selected-decoder square check; add a default-off experimental side panel (#246, #277, #284, #245).
+- Preserve DiLink 4 native casting mode, offer pre-connection calibration and apply live cluster picture adjustments (#260, #265).
+- Retain a recent dashboard turn card only across wireless replacement within its stale window; add a Smaller map choice (125%) and the checked DiLink 3 full-then-half projection sequence with compensation (#304, #306, #296).
+- Restore battery reads when only sys.car.protocol is populated and recover eligible unbound wheel services using already-authorized ADB (#285, #297).
+- Add independent default-off experimental DiLink 3 call keys and dashboard calls, with initialized watcher readiness, unique ownership, pristine-safe cancellation and retryable dirty cleanup; target-car acceptance remains requested (#243).
+- Correct the observed 24 kHz Siri microphone RTP clock while retaining 48 kHz for telephony/unobserved formats; add bounded, default-off experimental AAC-LC buffered music and single-session renderer ownership (#295, #308).
+- Set TCP_NODELAY on the touch event channel; contributor latency observations remain device-specific (#311).
+- Improve full-size multi-window home/settings appearance, ambient-setting visibility and shared menu persistence; add main-settings car-button customization (#252, #239, #281, #302).
+- Add light waiting/cluster placeholders and a 300 ms cluster fade; the main waiting screen follows CarPlay day/night mode (#305, #317).
+- Add Traditional Chinese (Taiwan) as the seventh app language, preserve explicit script selection and correct Simplified Chinese hotspot wording (#314, #286). The release website also gains a Traditional Chinese edition.
+- Retain the multilingual website groundwork, add the smooth-wireless guide and make buffered-ownership tests deterministic without runtime/API changes (#240, #310, #312).
+
+See [0.2.13 release notes](docs/RELEASE-NOTES-0.2.13.md) for all 35 contribution links, credits, experimental settings, compatibility limits and diagnostic export steps. Final exact-release validation is recorded in [VALIDATION](docs/VALIDATION.md). This remains a public preview; no fresh complete-release vehicle test is claimed.
+
+# DiPlay 0.2.12 — 2026-10-04
+
+- Add Existing Wi-Fi / Same LAN wireless CarPlay with scoped IPv4/IPv6 discovery and network-change cleanup (#223).
+- Wait for a stable car-hotspot interface and recover bounded wireless attempts when no AirPlay TCP follows StartSession (#229); add observed-state, authorized-ADB hotspot fallback on firmware exposing supported commands (#235).
+- Improve Apple USB attach matching and narrowly scoped optional USB-prompt assistance (#170, #224).
+- Pause Android 10 station scans during eligible hotspot/P2P sessions, preserving Same LAN, with controller leases and durable retryable restoration (#225).
+- Improve split-screen, launcher cards, short-screen preparation and virtual cluster/floating-map geometry (#171, #172, #181).
+- Add independent system-bar controls and correct in-session save/cancel and Local/USB-CH341 authentication selection (#191, #194).
+- Add system, light-sensor, day and night CarPlay appearance modes, richer custom turn cards, and live main-video picture controls (#178, #193, #211).
+- Offer custom integer resolution from 30% to 160%, with shared limits, correct 30%/160% labels and decoder/canvas capability fallback; refresh connection settings on resume (#179, #230, #196).
+- Reconcile opt-in DiLink 4 cluster routing/calibration into one decoder owner, retain verified HUD gates, and journal exact stock-map holds and recovery (#213, #187).
+- Add DiLink 3 guidance text and projection-display support with committed recovery before mutation, partial-setup compensation and retryable stock restoration (#182).
+- Add opt-in wheel map zoom and main-screen joystick while preserving press/release and call behavior; reject stale queued work across phone/screen changes (#214, #231).
+- Switch supported dashboard contents live using actual delivery and safely retained paused choices; preserve selection across stream/phone replacement (#232).
+- Add a five-second dashboard-song-on-change window with timer invalidation, and retain album art while the next transfer is pending (#215, #228).
+- Export reports through Downloads, document picker, app-external or private fallback storage, with explicit View/Share actions (#185, #219).
+
+See [0.2.12 release notes](docs/RELEASE-NOTES-0.2.12.md) for the complete corrections, hardware evidence and issue-reporting steps. This remains a public preview; no fresh end-to-end vehicle test of the complete repaired release is claimed.
+
+# DiPlay 0.2.11 — 2026-10-03
+
+- Add preferred Wi-Fi Direct channel selection for the next connection; Auto remains the default, and manual channel rejection/mismatch reports an error (#175).
+- Add a movable custom dashboard turn card with 2% position steps; leave unknown arrows blank and clear expired guidance (#155).
+- Offer two-, three- or four-finger settings swipes, keeping three as the default (#156).
+- Add opt-in read-only legacy vehicle-data detection while preserving default DiLink 5.0 mode; reject unaccepted/stale probe publication and fix accepted-battery lock ordering (#158, integrated through #173).
+- Keep wireless location/vehicle data on its runtime Wi-Fi link and defer parked-video decisions until SETUP/event readiness (#157).
+- Add optional automatic car-hotspot startup, off by default, with verified own-package authorization and unified vehicle settings (#164/#173).
+- Support Android TV/remote controls while preserving head-unit touchscreen Back and absolute knob X/Y; keep its workflow source-only (#146).
+- Retain artists across partial title updates and publish song metadata/artwork only when changed (#161, #162).
+- Correct Android 9 audio API use, release failed codecs, reconnect with settled geometry/readiness, and require own-app VPN scope (#168 and local corrections).
+- Add one guarded Auto-mode API 29 P2P recovery for the exact reported pre-create Builder error, plus bounded wireless/media/theme/own-app-exit diagnostics without payload recording or automatic uploads.
+
+See [0.2.11 release notes](docs/RELEASE-NOTES-0.2.11.md) for requirements, device-test limits and fresh-report guidance. Preferred channel selection does not establish stutter as fixed; Qin Plus, Siri, iOS 15 and day/night reports remain under investigation. Android 9 is still the minimum; Wi-Fi Direct needs Android 10+.
 
 # DiPlay 0.2.10 — 2026-10-03
 

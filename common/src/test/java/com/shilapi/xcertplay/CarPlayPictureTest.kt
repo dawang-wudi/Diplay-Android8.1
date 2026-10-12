@@ -9,7 +9,7 @@ import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [27, 29], manifest = Config.NONE)
+@Config(sdk = [29], manifest = Config.NONE)
 class CarPlayPictureTest {
     private val prefs get() = CarPlayPicture.preferences(RuntimeEnvironment.getApplication())
     @Before fun reset() { prefs.edit().clear().commit() }

@@ -13,7 +13,9 @@ internal class MicrophoneCaptureStats(
     private val report: (String) -> Unit,
     private val nowNs: () -> Long = System::nanoTime,
 ) {
-    private val metadata = metadata(config)
+    private val type = typeAndSource(config.audioType).first
+    private val format = format(config)
+    private var metadata = metadata(config)
     private var windowStart = nowNs()
     private var readStart = windowStart
     private var capturedBytes = 0L
@@ -27,12 +29,16 @@ internal class MicrophoneCaptureStats(
     private var sendErrors = 0L
     private var lastSentNs: Long? = null
     private var sendGapMaxNs = 0L
+    private var peakSample = 0
     private var routedDeviceType: Int? = null
 
     fun started(routeType: Int?) {
         routedDeviceType = routeType
         emit("Microphone: start $metadata routedDeviceType=${routeType ?: "unknown"}")
     }
+
+    /** Call before the capture thread starts; [metadata] is not volatile. */
+    fun useVoiceCommunicationSource() { metadata = "type=$type source=VOICE_COMMUNICATION $format" }
 
     fun reading() { readStart = nowNs() }
 
@@ -43,6 +49,19 @@ internal class MicrophoneCaptureStats(
             count > 0 -> capturedBytes += count
             count == 0 -> zeroReads++
             else -> readErrors++
+        }
+    }
+
+    /**
+     * The loudest 16-bit little-endian sample sent in this window. Without it, a microphone that
+     * delivers silence and an uplink the iPhone discards looked the same in a report (#647).
+     */
+    fun level(pcm: ByteArray) {
+        var index = 0
+        while (index + 1 < pcm.size) {
+            val sample = (pcm[index].toInt() and 0xff) or (pcm[index + 1].toInt() shl 8)
+            peakSample = maxOf(peakSample, kotlin.math.abs(sample))
+            index += 2
         }
     }
 
@@ -60,6 +79,8 @@ internal class MicrophoneCaptureStats(
 
     fun sendFailed() { sendErrors++ }
 
+    fun restarted(attempt: Int) { emit("Microphone: recording restarted $metadata attempt=$attempt") }
+
     fun failure(stage: MicrophoneFailureStage, error: Throwable? = null, code: Int? = null) {
         emit(failureMessage(metadata, stage, error, code))
     }
@@ -72,7 +93,7 @@ internal class MicrophoneCaptureStats(
             "captureBytes=$capturedBytes reads=$reads zeroReads=$zeroReads readErrors=$readErrors " +
             "readMaxMs=${readMaxNs / 1_000_000} encodedFrames=$encodedFrames " +
             "emptyEncodedFrames=$emptyEncodedFrames udpSent=$udpSent sendErrors=$sendErrors " +
-            "sendGapMaxMs=${sendGapMaxNs / 1_000_000} ended=$ended")
+            "sendGapMaxMs=${sendGapMaxNs / 1_000_000} peakDbfs=${peakDbfs(peakSample)} ended=$ended")
         windowStart = now
         capturedBytes = 0
         reads = 0
@@ -84,6 +105,7 @@ internal class MicrophoneCaptureStats(
         udpSent = 0
         sendErrors = 0
         sendGapMaxNs = 0
+        peakSample = 0
     }
 
     private fun emit(message: String) { runCatching { report(message) } }
@@ -91,14 +113,22 @@ internal class MicrophoneCaptureStats(
     companion object {
         private const val REPORT_INTERVAL_NS = 5_000_000_000L
 
+        /** Whole dBFS of a 16-bit peak; "silent" when every sample was zero. */
+        internal fun peakDbfs(peak: Int): String =
+            if (peak <= 0) "silent" else Math.round(20 * kotlin.math.log10(peak / 32768.0)).toString()
+
+        private fun typeAndSource(audioType: String): Pair<String, String> = when (audioType) {
+            "telephony" -> "telephony" to "VOICE_COMMUNICATION"
+            "speechrecognition" -> "speechrecognition" to "VOICE_RECOGNITION"
+            else -> "other" to "MIC"
+        }
+
+        private fun format(config: MicrophoneConfig): String = "codec=${config.codec.name} " +
+            "rate=${config.sampleRate} channels=${config.channels} frameMs=${config.frameMillis}"
+
         private fun metadata(config: MicrophoneConfig): String {
-            val (type, source) = when (config.audioType) {
-                "telephony" -> "telephony" to "VOICE_COMMUNICATION"
-                "speechrecognition" -> "speechrecognition" to "VOICE_RECOGNITION"
-                else -> "other" to "MIC"
-            }
-            return "type=$type source=$source codec=${config.codec.name} " +
-                "rate=${config.sampleRate} channels=${config.channels} frameMs=${config.frameMillis}"
+            val (type, source) = typeAndSource(config.audioType)
+            return "type=$type source=$source ${format(config)}"
         }
 
         private fun failureMessage(

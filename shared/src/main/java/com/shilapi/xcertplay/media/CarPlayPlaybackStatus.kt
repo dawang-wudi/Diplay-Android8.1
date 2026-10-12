@@ -14,8 +14,6 @@ data class CarPlayNowPlaying(
     val durationMillis: Long? = null,
     val elapsedMillis: Long? = null,
     val playing: Boolean = false,
-    // Song fields can arrive before STATUS. Unknown must not be treated as an explicit pause.
-    val playbackStatusKnown: Boolean = false,
 )
 
 /**
@@ -24,7 +22,7 @@ data class CarPlayNowPlaying(
  * clears it.
  */
 class CarPlayPlaybackStatus {
-    var nowPlaying = CarPlayNowPlaying()
+    @Volatile var nowPlaying = CarPlayNowPlaying()
         private set
 
     val playing: Boolean get() = nowPlaying.playing
@@ -36,7 +34,6 @@ class CarPlayPlaybackStatus {
         val media = runCatching { body.optionalGroup(MEDIA_ITEM) }.getOrNull()
         val playback = runCatching { body.optionalGroup(PLAYBACK) }.getOrNull()
         val previous = nowPlaying
-        val status = playback.readStatus()
         val next = previous.copy(
             title = media.updatedString(TITLE, previous.title),
             album = media.updatedString(ALBUM, previous.album),
@@ -45,8 +42,7 @@ class CarPlayPlaybackStatus {
             sourceApp = playback.updatedString(SOURCE_APP, previous.sourceApp),
             durationMillis = media.updatedU32(DURATION, previous.durationMillis),
             elapsedMillis = playback.updatedU32(ELAPSED, previous.elapsedMillis),
-            playing = status ?: previous.playing,
-            playbackStatusKnown = previous.playbackStatusKnown || status != null,
+            playing = playback.updatedStatus(previous.playing),
         )
         if (next == previous) return null
         nowPlaying = next
@@ -89,9 +85,9 @@ class CarPlayPlaybackStatus {
         return runCatching { u8(id) }.getOrElse { previous }
     }
 
-    private fun Iap2BodyReader?.readStatus(): Boolean? {
-        if (this == null || !has(STATUS)) return null
-        return runCatching { u8(STATUS) == STATUS_PLAYING }.getOrNull()
+    private fun Iap2BodyReader?.updatedStatus(previous: Boolean): Boolean {
+        if (this == null || !has(STATUS)) return previous
+        return runCatching { u8(STATUS) == STATUS_PLAYING }.getOrElse { previous }
     }
 
     companion object {

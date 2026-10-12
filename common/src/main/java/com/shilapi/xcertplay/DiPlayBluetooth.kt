@@ -5,9 +5,6 @@ import android.content.Context
 import android.provider.Settings
 
 internal object DiPlayBluetooth {
-    // Legacy vendor firmware may expose its address. On modern systems this optional
-    // privileged read is caught and the settings/identity fallback remains authoritative.
-    @android.annotation.SuppressLint("MissingPermission")
     fun localAddress(context: Context): String? {
         val adapter = runCatching { context.getSystemService(BluetoothManager::class.java)?.adapter?.address }.getOrNull()
         val setting = runCatching { Settings.Secure.getString(context.contentResolver, "bluetooth_address") }.getOrNull()

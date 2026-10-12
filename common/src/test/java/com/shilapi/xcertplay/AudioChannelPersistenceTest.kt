@@ -22,28 +22,14 @@ class AudioChannelPersistenceTest {
     @Test fun freshInstallUsesAutomaticRouting() {
         assertEquals(0, AirPlayPersistence.loadMediaAudioChannel(context))
         assertEquals(0, AirPlayPersistence.loadNavigationAudioChannel(context))
+        org.junit.Assert.assertTrue(AirPlayPersistence.loadAudioFocusAutoYield(context))
     }
 
-    @Test fun siriCompatibilityFollowsBuildDefaultUntilExplicitlySaved() {
-        assertEquals(context.resources.getBoolean(com.shilapi.xcertplay.host.R.bool.config_siri_uses_navigation),
-            AirPlayPersistence.loadSiriUsesNavigation(context))
-        for (enabled in listOf(true, false, true)) {
-            AirPlayPersistence.saveSiriUsesNavigation(context, enabled)
-            assertEquals(enabled, AirPlayPersistence.loadSiriUsesNavigation(context))
-        }
-    }
-
-    @Test fun siriCompatibilityDoesNotOverwriteWorkingNavigationAndMediaSettings() {
-        AirPlayPersistence.saveMediaAudioChannel(context, 3)
-        AirPlayPersistence.saveNavigationAudioChannel(context, 15)
-        AirPlayPersistence.saveAudioFocusEnabled(context, true)
-        AirPlayPersistence.saveNavigationAudioFocusEnabled(context, true)
-        AirPlayPersistence.saveSiriUsesNavigation(context, true)
-        AirPlayPersistence.saveSiriUsesNavigation(context, false)
-        assertEquals(3, AirPlayPersistence.loadMediaAudioChannel(context))
-        assertEquals(15, AirPlayPersistence.loadNavigationAudioChannel(context))
-        assertEquals(true, AirPlayPersistence.loadAudioFocusEnabled(context))
-        assertEquals(true, AirPlayPersistence.loadNavigationAudioFocusEnabled(context))
+    @Test fun audioFocusAutoYieldCanBeSavedAndRestored() {
+        AirPlayPersistence.saveAudioFocusAutoYield(context, false)
+        org.junit.Assert.assertFalse(AirPlayPersistence.loadAudioFocusAutoYield(context))
+        AirPlayPersistence.saveAudioFocusAutoYield(context, true)
+        org.junit.Assert.assertTrue(AirPlayPersistence.loadAudioFocusAutoYield(context))
     }
 
     @Test fun legacyNavigationChannelIsInheritedWithoutChangingMedia() {

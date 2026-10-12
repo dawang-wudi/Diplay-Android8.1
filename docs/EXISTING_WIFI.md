@@ -1,6 +1,6 @@
 # Existing Wi-Fi / Same LAN
 
-Connect the Android receiver and iPhone to the same third-party router, another phone’s hotspot or portable
+Connect the Android receiver and iPhone to the same third-party router or portable
 Wi-Fi in system settings. In DiPlay → Connection setup → Wireless, select
 **Existing Wi-Fi / Same LAN**, enter the exact SSID and WPA2 password, and save.
 For an open network, leave the password empty. Keep Bluetooth enabled and the iPhone
@@ -28,7 +28,7 @@ reads channel information from WifiInfo. Internet validation is not required for
 communication. Ambiguous Wi-Fi connections and observable configuration mismatches
 fail with a configuration error.
 
-This fork keeps its IPv4-first bootstrap policy, with scoped link-local IPv6 as a fallback.
+The bootstrap endpoint prefers a scoped link-local IPv6 address, falling back to IPv4.
 Existing Wi-Fi also retains the other usable address family for discovery and TCP.
 Each family has a JmDNS registry and a listener bound to the same selected interface
 and port. Port fallback is shared and partially bound listeners are cleaned up.
@@ -44,7 +44,8 @@ placeholder, zero, multicast or malformed AP addresses are omitted. The P2P and 
 hotspot backends retain their existing single-address defaults and bootstrap behavior.
 
 Network loss or a change to either selected address restarts the wireless session.
-Closing the backend unregisters its callback without disconnecting Wi-Fi.
+Closing the backend unregisters its callback without disconnecting Wi-Fi. Saved
+automatic car-hotspot startup applies only to car-hotspot mode.
 
 Related work: [PR #22](https://github.com/shihabal3amri/DiPlay/pull/22) also implements
 external Wi-Fi within an Android 7 port. This feature uses the current architecture
@@ -52,14 +53,12 @@ without importing that port or its system network modifications.
 
 ## Validation
 
-The v14 universal fork still requires a physical head-unit/iPhone test of Same LAN.
-
 Tests cover station selection, redacted network information, manual configuration,
 address scope and family selection, callback cleanup, settings persistence, dual-family
 publication/listening, port fallback, mode transitions and bootstrap encoding. Existing
 P2P and hotspot tests run alongside them.
 
-The upstream contributor reports a successful clean install of their implementation on a
+The contributor reports a successful clean install of the final implementation on a
 2022 BYD Han DM-i with DiLink 4.0 / Android 10 (API 29), firmware
 21.1.21.2401160.1: the previous test app was uninstalled, the standalone test APK was
 installed and configured normally, and Same LAN entered CarPlay with no issues noticed

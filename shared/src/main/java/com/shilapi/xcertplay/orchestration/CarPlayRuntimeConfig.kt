@@ -2,6 +2,7 @@ package com.shilapi.xcertplay.orchestration
 
 import com.shilapi.xcertplay.transport.Iap2IdentificationConfig
 import com.shilapi.xcertplay.transport.UsbDeviceId
+import com.shilapi.xcertplay.network.WifiP2pChannels
 import java.net.Inet6Address
 import java.net.InetAddress
 
@@ -52,16 +53,11 @@ class CarPlayRuntimeConfig(
     val hostMac: ByteArray = DEFAULT_HOST_MAC,
     val linkLocal: String = "fe80::2",
     val identification: Iap2IdentificationConfig,
-    val availableCurrentMilliAmps: Int = 2400,
+    val availableCurrentMilliAmps: Int = DEFAULT_AVAILABLE_CURRENT_MILLI_AMPS,
     val label: String = "xcertplay",
     val hostName: String = "xcertplay",
     val transport: CarPlayTransport = CarPlayTransport.WIRED,
     val wirelessHotspotMode: WirelessHotspotMode = WirelessHotspotMode.WIFI_P2P,
-    /**
-     * Turns the head unit's own hotspot on before the manual hotspot wait, for firmware that does
-     * not start it by itself. Only the manual hotspot mode uses it.
-     */
-    val autoEnableCarHotspot: Boolean = false,
     val manualHotspotSsid: String? = null,
     val manualHotspotPassphrase: String? = null,
     val manualHotspotBand: ManualHotspotBand = ManualHotspotBand.AUTO,
@@ -69,6 +65,7 @@ class CarPlayRuntimeConfig(
     val manualHotspotSecurity: ManualHotspotSecurity = ManualHotspotSecurity.WPA2,
     val wirelessBluetoothDeviceAddress: String? = null,
     val locationReportingEnabled: Boolean = false,
+    val wifiP2pPreferredChannel: Int = WifiP2pChannels.AUTO,
     val existingWifiSsid: String = "",
     val existingWifiPassphrase: String = "",
 ) {
@@ -105,6 +102,11 @@ class CarPlayRuntimeConfig(
         if (transport == CarPlayTransport.WIRELESS && wirelessHotspotMode == WirelessHotspotMode.EXISTING_WIFI) {
             require(ManualHotspotValidation.error(existingWifiSsid, existingWifiPassphrase) == null) {
                 "Existing Wi-Fi requires an SSID of at most 32 UTF-8 bytes and an empty (open) or 8–63 character WPA2 password"
+            }
+        }
+        if (transport == CarPlayTransport.WIRELESS && wirelessHotspotMode == WirelessHotspotMode.WIFI_P2P) {
+            require(WifiP2pChannels.isValid(wifiP2pPreferredChannel)) {
+                "Unsupported Wi-Fi Direct channel: $wifiP2pPreferredChannel"
             }
         }
         if (transport == CarPlayTransport.WIRELESS && wirelessHotspotMode == WirelessHotspotMode.MANUAL) {
@@ -147,6 +149,8 @@ class CarPlayRuntimeConfig(
 
     companion object {
         const val APPLE_VENDOR_ID = 0x05ac
+        /** The wired iAP2 charging offer; the iPhone may draw up to this much from the car's USB port. */
+        const val DEFAULT_AVAILABLE_CURRENT_MILLI_AMPS = 2400
         val DEFAULT_HOST_MAC = byteArrayOf(0x02, 0x00, 0x00, 0x00, 0x00, 0x02)
         private fun isLinkLocalIpv6(value: String): Boolean {
             if (value.contains('%') || '\u0000' in value || !value.contains(':')) return false

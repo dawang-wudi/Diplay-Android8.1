@@ -16,7 +16,6 @@ import java.net.Inet6Address
 import java.net.InetAddress
 import java.net.NetworkInterface
 import java.net.SocketException
-import java.net.UnknownHostException
 import java.util.Collections
 import java.util.UUID
 import java.util.concurrent.Executor
@@ -29,6 +28,7 @@ import java.util.concurrent.TimeUnit
  * the AP interface is usable. The reservation and multicast lock stay owned by this instance
  * until [close].
  */
+@RequiresApi(Build.VERSION_CODES.O)
 class LocalOnlyHotspotManager(context: Context, private val onDiagnostic: (String) -> Unit = {}) : WirelessHotspotManager {
     private val connectivityManager =
         context.applicationContext.getSystemService(ConnectivityManager::class.java)
@@ -186,13 +186,10 @@ class LocalOnlyHotspotManager(context: Context, private val onDiagnostic: (Strin
         val executor = Executor { main.post(it) }
         if (Build.VERSION.SDK_INT == 33 || Build.VERSION.SDK_INT >= 36) {
             try {
-                // Android 13 exposes this builder through a hidden API. Avoid linking
-                // directly to the constructor which only became public in API 36.
-                val builderClass = Class.forName("android.net.wifi.SoftApConfiguration\$Builder")
-                val builder = builderClass.getConstructor().newInstance()
-                builderClass.getMethod("setSsid", String::class.java)
+                val builder = SoftApConfiguration.Builder()
+                SoftApConfiguration.Builder::class.java.getMethod("setSsid", String::class.java)
                     .invoke(builder, "DiPlay-${UUID.randomUUID().toString().take(6)}")
-                builderClass.getMethod("setPassphrase", String::class.java, Int::class.javaPrimitiveType)
+                SoftApConfiguration.Builder::class.java.getMethod("setPassphrase", String::class.java, Int::class.javaPrimitiveType)
                     .invoke(builder, UUID.randomUUID().toString().replace("-", "").take(20), SoftApConfiguration.SECURITY_TYPE_WPA2_PSK)
                 // Request the station's 5 GHz channel, or 36 without a 5 GHz station.
                 // BYD may override even a fixed channel (observed 40 -> 149), so credentials
@@ -202,17 +199,17 @@ class LocalOnlyHotspotManager(context: Context, private val onDiagnostic: (Strin
                 val preferredChannel = stationFrequency?.takeIf { it in 5160..5895 }
                     ?.let(::wifiFrequencyMhzToChannel) ?: 36
                 try {
-                    builderClass.getMethod("setChannel", Int::class.javaPrimitiveType, Int::class.javaPrimitiveType)
+                    SoftApConfiguration.Builder::class.java.getMethod("setChannel", Int::class.javaPrimitiveType, Int::class.javaPrimitiveType)
                         .invoke(builder, preferredChannel, SoftApConfiguration.BAND_5GHZ)
                 } catch (_: NoSuchMethodException) {
                     // Android 11 has no setChannel(channel, band); asking for the band
                     // alone still pins 5 GHz and leaves the channel to the firmware.
-                    builderClass.getMethod("setBand", Int::class.javaPrimitiveType)
+                    SoftApConfiguration.Builder::class.java.getMethod("setBand", Int::class.javaPrimitiveType)
                         .invoke(builder, SoftApConfiguration.BAND_5GHZ)
                 }
                 val method = if (Build.VERSION.SDK_INT >= 36) "startLocalOnlyHotspotWithConfiguration" else "startLocalOnlyHotspot"
                 WifiManager::class.java.getMethod(method, SoftApConfiguration::class.java, Executor::class.java,
-                    WifiManager.LocalOnlyHotspotCallback::class.java).invoke(wifiManager, builderClass.getMethod("build").invoke(builder), executor, callback)
+                    WifiManager.LocalOnlyHotspotCallback::class.java).invoke(wifiManager, builder.build(), executor, callback)
                 return preferredChannel
             } catch (failure: ReflectiveOperationException) {
                 if (failure.cause != null && failure.cause !is SecurityException && failure.cause !is UnsupportedOperationException) {
@@ -224,11 +221,7 @@ class LocalOnlyHotspotManager(context: Context, private val onDiagnostic: (Strin
             }
         }
         // Main-loop callback delivery survives cancellation to close late reservations.
-        try {
-            wifiManager.startLocalOnlyHotspot(callback, main)
-        } catch (error: SecurityException) {
-            throw IOException("Allow Wi-Fi/location permissions to start the hotspot", error)
-        }
+        wifiManager.startLocalOnlyHotspot(callback, main)
         return null
     }
 
@@ -451,11 +444,7 @@ class LocalOnlyHotspotManager(context: Context, private val onDiagnostic: (Strin
         val security = mapWifiConfigurationSecurity(configuration)
         val passphrase = validatePassphrase(security, unquote(configuration.preSharedKey))
         val bssid = configuration.BSSID?.let {
-            val bytes = it.split(':')
-            if (bytes.size != 6 || bytes.any { byte -> !byte.matches(Regex("[0-9a-fA-F]{1,2}")) }) {
-                throw IOException("LocalOnlyHotspot reported an invalid BSSID: $it")
-            }
-            bytes.map { byte -> byte.toInt(16).toByte() }.toByteArray()
+            parseMacAddress(it) ?: throw IOException("LocalOnlyHotspot reported an invalid BSSID: $it")
         }
         val channel = readWifiConfigurationChannel(configuration)
 
@@ -626,21 +615,10 @@ class LocalOnlyHotspotManager(context: Context, private val onDiagnostic: (Strin
                 .firstNotNullOfOrNull { it.toEui64MacAddress() }
 
     private fun NetworkInterface.hotspotAddress(): InetAddress? {
-        var ipv4: InetAddress? = null
-        for (address in Collections.list(inetAddresses)) {
-            if (address is Inet6Address && address.isLinkLocalAddress) {
-                if (address.scopeId == index) return address
-                try {
-                    return Inet6Address.getByAddress(null, address.address, this)
-                } catch (_: UnknownHostException) {
-                    continue
-                }
-            }
-            if (address is Inet4Address && !address.isLoopbackAddress && ipv4 == null) {
-                ipv4 = address
-            }
-        }
-        return ipv4
+        val address = HotspotAddressPolicy.select(Collections.list(inetAddresses)) ?: return null
+        if (address !is Inet6Address || address.scopeId == index) return address
+        return runCatching { Inet6Address.getByAddress(null, address.address, this) }
+            .getOrDefault(address)
     }
 
     private fun ensureStartActive(attempt: StartAttempt) {
@@ -760,6 +738,13 @@ class LocalOnlyHotspotManager(context: Context, private val onDiagnostic: (Strin
 
     private fun ByteArray.toMacAddressString(): String =
         joinToString(":") { "%02x".format(it.toInt() and 0xff) }
+
+    /** Parses `aa:bb:cc:dd:ee:ff` as `MacAddress.fromString` does; that call needs API 28. */
+    private fun parseMacAddress(value: String): ByteArray? {
+        val parts = value.split(':')
+        if (parts.size != 6 || parts.any { it.isEmpty() || it.length > 2 }) return null
+        return ByteArray(6) { index -> (parts[index].toIntOrNull(16) ?: return null).toByte() }
+    }
 
     private fun Inet6Address.toEui64MacAddress(): String? {
         val bytes = address

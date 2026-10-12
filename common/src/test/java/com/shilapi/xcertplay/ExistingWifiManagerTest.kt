@@ -30,7 +30,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [27, 29], manifest = Config.NONE)
+@Config(sdk = [29], manifest = Config.NONE)
 class ExistingWifiManagerTest {
     private val context = mock(Context::class.java)
     private val connectivity = mock(ConnectivityManager::class.java)
@@ -82,26 +82,6 @@ class ExistingWifiManagerTest {
         verify(connectivity).unregisterNetworkCallback(callback)
     }
 
-    @Test fun validatesLinkAgainBeforeHandoff() {
-        manager().use {
-            start(it)
-            it.validateReady()
-            properties = link("192.0.2.11/24")
-            val error = assertThrows(com.shilapi.xcertplay.network.WirelessStartupException::class.java) { it.validateReady() }
-            assertEquals(com.shilapi.xcertplay.network.WirelessStartupFailure.NETWORK_NOT_READY, error.reason)
-        }
-    }
-
-    @Test fun lossOfSecondaryIpv6AlsoRestarts() {
-        properties.setLinkAddresses(properties.linkAddresses + linkAddress("fe80::1234/64"))
-        manager().use {
-            start(it)
-            properties.setLinkAddresses(listOf(linkAddress("192.0.2.10/24")))
-            callback.onLinkPropertiesChanged(network, properties)
-            assertEquals(1, changes)
-        }
-    }
-
     @Test fun ignoresCellularAndVpnNetworks() {
         val cellular = mock(Network::class.java)
         val vpn = mock(Network::class.java)
@@ -111,20 +91,20 @@ class ExistingWifiManagerTest {
         manager().use { assertEquals("192.0.2.10", start(it).hostAddress!!.hostAddress) }
     }
 
-    @Test fun prefersIpv4AndRetainsScopedIpv6() {
+    @Test fun publishesIpv4AndKeepsTheScopedLinkLocalAsSecondary() {
         properties.setLinkAddresses(properties.linkAddresses + linkAddress("fe80::1234/64"))
         manager().use {
             val result = start(it)
             assertEquals("192.0.2.10", result.hostAddress!!.hostAddress)
-            val address = result.hostAddresses.last() as Inet6Address
             assertEquals(listOf("192.0.2.10", "fe80:0:0:0:0:0:0:1234"),
                 result.hostAddresses.map { host -> host.hostAddress!!.substringBefore('%') })
-            assertTrue(address.isLinkLocalAddress)
-            assertEquals(iface.index, address.scopeId)
+            val secondary = result.hostAddresses.last() as Inet6Address
+            assertTrue(secondary.isLinkLocalAddress)
+            assertEquals(iface.index, secondary.scopeId)
         }
     }
 
-    @Test fun lossOfPrimaryIpv4RestartsEvenWhenIpv6Remains() {
+    @Test fun lossOfIpv4AddressRestartsEvenWhenLinkLocalRemains() {
         properties.setLinkAddresses(properties.linkAddresses + linkAddress("fe80::1234/64"))
         manager().use {
             start(it)

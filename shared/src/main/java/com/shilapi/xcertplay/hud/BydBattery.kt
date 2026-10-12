@@ -21,12 +21,13 @@ internal data class BydBatteryReading(
     val rangeKm: Int,
     val remainingKwh: Double?,
     val charging: Boolean,
-    val protocol: BydBatteryProtocol,
+    val protocol: BydBatteryProtocol? = null,
 )
 
 /**
  * Reads the traction battery through the adb shell (autoservice binder), where apps would need a BYD
- * signature. The head unit's ro.car.protocol selects the SDK addresses, not its Android version.
+ * signature. The head unit's ro.car.protocol (or sys.car.protocol) selects the SDK addresses, not its
+ * Android version.
  */
 internal object BydBattery {
     private const val REMAINING = "service call autoservice 7 i32 1005 i32 882901008" // float kWh
@@ -34,7 +35,10 @@ internal object BydBattery {
 
     /** Unknown protocols give no reading; CAN has no verified remaining-energy address. */
     fun read(shell: (String) -> String?): BydBatteryReading? {
-        val protocol = when (shell("getprop ro.car.protocol")?.trim()) {
+        // Most firmware sets ro.car.protocol; the Tang's DiLink 5 (dynasty di5, 2025) sets only sys.car.protocol.
+        val property = shell("getprop ro.car.protocol")?.trim()?.takeIf { it.isNotEmpty() }
+            ?: shell("getprop sys.car.protocol")?.trim()
+        val protocol = when (property) {
             "CAN" -> BydBatteryProtocol.CAN
             "CANFD" -> BydBatteryProtocol.CANFD
             else -> return null
@@ -48,6 +52,38 @@ internal object BydBattery {
         } else null
         val bms = BydParcel.value(shell("service call autoservice 5 i32 1009 i32 ${protocol.chargingStateId}"))
         return BydBatteryReading(percent, range, remaining, bms == BMS_CHARGING, protocol)
+    }
+
+    fun read(context: Context, shell: (String) -> String?): BydBatteryReading? {
+        if (!BydOutputSettings.legacyVehicleProbe(context)) return read(shell)
+        val cached = BydVehicleFieldStore.load(context)
+            ?: return null
+        val bmsAddress = cached.result(BydVehicleField.BMS_STATE).address
+        val remainingAddress = cached.result(BydVehicleField.REMAINING_KWH).address
+        return readDetected(
+            cached.result(BydVehicleField.SOC).address?.command() ?: return null,
+            cached.result(BydVehicleField.RANGE).address?.command() ?: return null,
+            remainingAddress?.command(),
+            bmsAddress?.command(),
+            shell = shell,
+        )
+    }
+
+    private fun readDetected(
+        percentCommand: String,
+        rangeCommand: String,
+        remainingCommand: String?,
+        bmsCommand: String?,
+        shell: (String) -> String?,
+    ): BydBatteryReading? {
+        val percent = BydParcel.value(shell(percentCommand))?.let(::float)?.takeIf { it in 0.0..100.0 } ?: return null
+        val range = BydParcel.value(shell(rangeCommand))?.takeIf { it in 0..3000 } ?: return null
+        val measured = if (remainingCommand == null) null else {
+            BydParcel.value(shell(remainingCommand))?.let(::float)?.takeIf { it in 0.0..300.0 }
+                ?: return null
+        }
+        val bms = bmsCommand?.let { BydParcel.value(shell(it)) }
+        return BydBatteryReading(percent, range, measured, bms == BMS_CHARGING)
     }
 
     /**
@@ -91,8 +127,11 @@ internal object BydBatteryStatus : VehicleStatusProvider {
     private var started = false
     private val cache = BydBatteryCache(::now)
     private val readLock = Any()
+    // Never hold this short cache-publication lock while reading fields or waiting on ADB.
+    private val publicationLock = Any()
+    private var probePublicationGeneration = 0L
     @Volatile internal var readBattery: (Context) -> BydBatteryReading? = { app ->
-        BydBattery.read { shell.run(app, it) }
+        BydBattery.read(app) { shell.run(app, it) }
     }
     private val executor = Executors.newSingleThreadScheduledExecutor { runnable ->
         Thread(runnable, "diplay-battery").apply { isDaemon = true }
@@ -127,12 +166,28 @@ internal object BydBatteryStatus : VehicleStatusProvider {
 
     /** Serialize both ADB readers without blocking snapshot() or the UI on shell I/O. */
     fun read(appContext: Context, reader: () -> BydBatteryReading?): BydBatteryReading? = synchronized(readLock) {
+        val generation = synchronized(publicationLock) { probePublicationGeneration }
         val reading = reader()
+        synchronized(publicationLock) {
+            // An accepted probe can publish while this shell read is in flight. Its newer reading
+            // must not be replaced by a poll that began with the previous field snapshot.
+            if (generation == probePublicationGeneration) acceptReading(appContext, reading)
+        }
+        reading
+    }
+
+    /** Already-read data from an accepted field-store snapshot; never waits for shell I/O. */
+    fun publishProbeReading(appContext: Context, reading: BydBatteryReading) = synchronized(publicationLock) {
+        probePublicationGeneration += 1
+        acceptReading(appContext, reading)
+    }
+
+    /** Caller holds [publicationLock]; neither the field store nor ADB is consulted here. */
+    private fun acceptReading(appContext: Context, reading: BydBatteryReading?) {
         context = appContext.applicationContext
         if (cache.accept(reading) && reading != null) {
             Log.i(TAG, "battery ${reading.percent} % range ${reading.rangeKm} km ${reading.remainingKwh} kWh charging=${reading.charging} protocol=${reading.protocol}")
         }
-        reading
     }
 
     private fun now() = SystemClock.elapsedRealtime()

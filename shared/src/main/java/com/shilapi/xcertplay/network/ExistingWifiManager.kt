@@ -70,7 +70,7 @@ class ExistingWifiManager(
                         !it.hasTransport(NetworkCapabilities.TRANSPORT_VPN)
                 } == true
             }
-            if (networks.size > 1) throw WirelessStartupException(WirelessStartupFailure.HOTSPOT_CONFIGURATION, "Multiple Wi-Fi networks are active; keep one existing Wi-Fi connection")
+            if (networks.size > 1) throw IOException("Multiple Wi-Fi networks are active; keep one existing Wi-Fi connection")
             val network = networks.singleOrNull()
             val properties = network?.let(connectivity::getLinkProperties)
             val name = properties?.interfaceName
@@ -90,7 +90,7 @@ class ExistingWifiManager(
                     ?: networkInfo ?: stationInfo
                 val liveSsid = readableSsid(info)
                 if (liveSsid != null && liveSsid != ssid) {
-                    throw WirelessStartupException(WirelessStartupFailure.HOTSPOT_CONFIGURATION, "Configured Wi-Fi does not match the connected network; check Wi-Fi settings and saved details")
+                    throw IOException("Configured Wi-Fi does not match the connected network; check Wi-Fi settings and saved details")
                 }
                 val frequency = info?.frequency?.takeIf { it > 0 }
                 val channel = frequency?.let(::wifiFrequencyMhzToChannel) ?: 0
@@ -99,13 +99,13 @@ class ExistingWifiManager(
                 if (Build.VERSION.SDK_INT >= 31) {
                     when (observedSecurity) {
                         WifiInfo.SECURITY_TYPE_OPEN -> if (passphrase.isNotEmpty()) {
-                            throw WirelessStartupException(WirelessStartupFailure.HOTSPOT_CONFIGURATION, "Connected Wi-Fi is open; clear the saved Wi-Fi password")
+                            throw IOException("Connected Wi-Fi is open; clear the saved Wi-Fi password")
                         }
                         WifiInfo.SECURITY_TYPE_PSK, WifiInfo.SECURITY_TYPE_SAE -> if (passphrase.isEmpty()) {
-                            throw WirelessStartupException(WirelessStartupFailure.HOTSPOT_CONFIGURATION, "Connected Wi-Fi is secured; enter its WPA2 password")
+                            throw IOException("Connected Wi-Fi is secured; enter its WPA2 password")
                         }
                         WifiInfo.SECURITY_TYPE_UNKNOWN -> Unit
-                        else -> throw WirelessStartupException(WirelessStartupFailure.HOTSPOT_CONFIGURATION, "Existing Wi-Fi requires an open or WPA2-Personal network")
+                        else -> throw IOException("Existing Wi-Fi requires an open or WPA2-Personal network")
                     }
                 }
                 synchronized(lock) {
@@ -115,16 +115,7 @@ class ExistingWifiManager(
                     hosts = addresses
                     interfaceIndex = iface.index
                     interfaceName = name
-                    val request = NetworkRequest.Builder().apply {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) clearCapabilities()
-                        else {
-                            // clearCapabilities became public in API 30; remove the older defaults explicitly.
-                            removeCapability(NetworkCapabilities.NET_CAPABILITY_TRUSTED)
-                            removeCapability(NetworkCapabilities.NET_CAPABILITY_NOT_RESTRICTED)
-                            removeCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)
-                        }
-                    }
-                    connectivity.registerNetworkCallback(request
+                    connectivity.registerNetworkCallback(requestWithoutDefaultCapabilities()
                         .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
                         .addCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN).build(), callback)
                     callbackRegistered = true
@@ -132,7 +123,7 @@ class ExistingWifiManager(
                 // Close the gap between reading the link and registering the callback.
                 val current = connectivity.getLinkProperties(network)
                 if (current == null || !sameLink(current) || invalidated.get()) {
-                    throw WirelessStartupException(WirelessStartupFailure.NETWORK_NOT_READY, "Existing Wi-Fi changed during startup; connect again")
+                    throw IOException("Existing Wi-Fi changed during startup; connect again")
                 }
                 onDiagnostic("Existing Wi-Fi attached iface=$name host=${address.hostAddress} " +
                     "networkNameReadable=${liveSsid != null} channel=$channel security=${security()} " +
@@ -147,7 +138,7 @@ class ExistingWifiManager(
                     }, WirelessHotspotBackend.EXISTING_WIFI, hostAddresses = addresses, accessPointBssid = apBssid)
             }
             if ((System.nanoTime() - started) / 1_000_000 >= timeoutMillis) {
-                throw WirelessStartupException(WirelessStartupFailure.NETWORK_NOT_READY, "Existing Wi-Fi is not connected or has no usable address. Connect both devices to the same Wi-Fi in system settings")
+                throw IOException("Existing Wi-Fi is not connected or has no usable address. Connect both devices to the same Wi-Fi in system settings")
             }
             Thread.sleep(200)
         }
@@ -182,15 +173,6 @@ class ExistingWifiManager(
     override fun connectionDiagnosticSnapshot(): String =
         "existingWifiLink=${if (closed || invalidated.get()) "lost" else "attached"}"
 
-    override fun validateReady() {
-        val network = selected
-        val current = network?.let(connectivity::getLinkProperties)
-        if (closed || invalidated.get() || current == null || !sameLink(current)) {
-            throw WirelessStartupException(WirelessStartupFailure.NETWORK_NOT_READY,
-                "Existing Wi-Fi changed before CarPlay handoff; connect again")
-        }
-    }
-
     override fun close() {
         synchronized(lock) {
             closed = true
@@ -200,4 +182,15 @@ class ExistingWifiManager(
             }
         }
     }
+
+    // NetworkRequest.Builder.clearCapabilities needs API 30; before that, drop the defaults one by one.
+    private fun requestWithoutDefaultCapabilities(): NetworkRequest.Builder =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            NetworkRequest.Builder().clearCapabilities()
+        } else {
+            NetworkRequest.Builder()
+                .removeCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                .removeCapability(NetworkCapabilities.NET_CAPABILITY_NOT_RESTRICTED)
+                .removeCapability(NetworkCapabilities.NET_CAPABILITY_TRUSTED)
+        }
 }

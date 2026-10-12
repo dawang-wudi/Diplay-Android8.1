@@ -46,6 +46,22 @@ class MicrophoneCaptureStatsTest {
         assertTrue(final.endsWith("ended=true"))
     }
 
+    @Test fun reportsTheLoudestSampleSoSilentCaptureStandsOut() {
+        // #647: a silent microphone and a discarded uplink looked the same in a report.
+        var now = 0L
+        val reports = mutableListOf<String>()
+        val stats = MicrophoneCaptureStats(config, reports::add) { now }
+        stats.level(ByteArray(960))
+        now = 5_000_000_000
+        stats.flush()
+        assertTrue(reports.last().contains("peakDbfs=silent"))
+        // -16384 little-endian is half of full scale: -6 dBFS.
+        stats.level(byteArrayOf(0, 0, 0x00, 0xc0.toByte(), 0x10, 0x00))
+        stats.flush(ended = true)
+        assertTrue(reports.last().contains("peakDbfs=-6 ended=true"))
+        assertEquals("0", MicrophoneCaptureStats.peakDbfs(32768))
+    }
+
     @Test fun reportingIsBoundedAndRouteQueriesRunOnlyWhenDue() {
         var now = 0L
         var reports = 0
@@ -89,6 +105,17 @@ class MicrophoneCaptureStatsTest {
         assertTrue(reports.single().contains("captureBytes=0 reads=0"))
         assertTrue(reports.single().contains("udpSent=0"))
         assertTrue(reports.single().contains("routedDeviceType=unknown"))
+    }
+
+    @Test fun fallbackSourceIsReportedAfterTheRefusedSource() {
+        val reports = mutableListOf<String>()
+        val stats = MicrophoneCaptureStats(config.copy(audioType = "speechrecognition"), reports::add) { 0 }
+        stats.failure(MicrophoneFailureStage.RECORDER_CREATION, UnsupportedOperationException())
+        stats.useVoiceCommunicationSource()
+        stats.started(15)
+        stats.flush(ended = true)
+        assertTrue(reports[0].contains("type=speechrecognition source=VOICE_RECOGNITION"))
+        assertTrue(reports.drop(1).all { it.contains("type=speechrecognition source=VOICE_COMMUNICATION") })
     }
 
     @Test fun outputContainsOnlyAllowlistedMetadataAndNeverExceptionMessagesOrEndpoints() {

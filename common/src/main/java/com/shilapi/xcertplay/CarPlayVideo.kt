@@ -76,8 +76,8 @@ internal object CarPlayVideo : CarPlayVideoListener {
     }
 
     /**
-     * A media key (CarPlayMediaButton index) while the player is on screen: explicit play/pause
-     * preserve their state, next and previous skip 10 s. The iPhone is not asked: a CarPlay play/pause makes it end
+     * A steering-wheel media key (CarPlayMediaButton index) while the player is on screen: play and pause
+     * toggle it, next and previous skip 10 s. The iPhone is not asked: a CarPlay play/pause makes it end
      * the video session. Returns false when no player is open. Main thread.
      */
     fun onMediaKey(index: Int): Boolean {
@@ -85,10 +85,7 @@ internal object CarPlayVideo : CarPlayVideoListener {
         when (index) {
             CarPlayMediaButton.NEXT -> player.skip(SKIP_MILLIS)
             CarPlayMediaButton.PREVIOUS -> player.skip(-SKIP_MILLIS)
-            CarPlayMediaButton.PLAY -> setPlaying(true)
-            CarPlayMediaButton.PAUSE -> setPlaying(false)
-            CarPlayMediaButton.PLAY_PAUSE -> setPlaying(!playing)
-            else -> return false
+            else -> setPlaying(!playing)
         }
         return true
     }

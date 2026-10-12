@@ -5,23 +5,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class AudioChannelMappingTest {
-    @Test fun siriCompatibilityChangesOnlySpeechRecognitionInBothMappingModes() {
-        for (mode in AudioChannelMappingMode.values()) {
-            for (type in listOf(100, 101, 102)) {
-                assertEquals(
-                    AudioChannelSelection(AudioChannel.NAVIGATION, AudioContentType.SPEECH, 15),
-                    AudioChannelMapper.map("speechRecognition", type, mode, 15, siriUsesNavigation = true),
-                )
-                for (audioType in listOf("media", "telephony", "default", "alert", "compatibility", "unknown")) {
-                    assertEquals(
-                        AudioChannelMapper.map(audioType, type, mode, 15),
-                        AudioChannelMapper.map(audioType, type, mode, 15, siriUsesNavigation = true),
-                    )
-                }
-            }
-        }
-    }
-
     @Test
     fun mobileCompatibleMappingMatchesTheOriginalRouting() {
         assertMapped(
@@ -111,6 +94,18 @@ class AudioChannelMappingTest {
             contentType = AudioContentType.SPEECH,
             streamType = AudioChannelMapper.DEFAULT_NAVIGATION_STREAM_TYPE,
         )
+    }
+
+    @Test
+    fun aPhoneCallOnTheSpeakerUsesTheMediaChannel() {
+        val phone = AudioChannelMapper.map("telephony", 100, AudioChannelMappingMode.MOBILE_COMPATIBLE)
+        assertEquals(AudioChannel.PHONE, phone.channel)
+        assertEquals(
+            AudioChannelSelection(AudioChannel.MEDIA, AudioContentType.SPEECH, phone.streamType),
+            AudioChannelMapper.playCallOnSpeaker(phone),
+        )
+        val media = AudioChannelMapper.map("media", 100, AudioChannelMappingMode.MOBILE_COMPATIBLE)
+        assertEquals(media, AudioChannelMapper.playCallOnSpeaker(media))
     }
 
     @Test

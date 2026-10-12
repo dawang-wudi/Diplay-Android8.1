@@ -7,6 +7,7 @@ import android.widget.EditText
 import android.widget.LinearLayout
 import android.view.View
 import android.view.ViewGroup
+import com.shilapi.xcertplay.network.CarHotspotSettings
 import com.shilapi.xcertplay.orchestration.CarPlayRuntimeConfig
 import com.shilapi.xcertplay.orchestration.CarPlayTransport
 import com.shilapi.xcertplay.orchestration.WirelessHotspotMode
@@ -22,7 +23,7 @@ import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowAlertDialog
 
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [27, 29], qualifiers = "en", manifest = Config.NONE)
+@Config(sdk = [29], qualifiers = "en", manifest = Config.NONE)
 class ExistingWifiSettingsTest {
     private val app get() = RuntimeEnvironment.getApplication()
     private lateinit var activity: DiPlayActivity
@@ -37,7 +38,7 @@ class ExistingWifiSettingsTest {
         AirPlayPersistence.saveManualHotspotSsid(app, "Car hotspot")
         AirPlayPersistence.saveManualHotspotPassphrase(app, "car-password")
         AirPlayPersistence.saveExistingWifiCredentials(app, "Pocket", "pocket-password")
-        for (mode in AirPlayPersistence.availableWirelessHotspotModes()) {
+        for (mode in listOf(WirelessHotspotMode.EXISTING_WIFI, WirelessHotspotMode.WIFI_P2P, WirelessHotspotMode.MANUAL)) {
             AirPlayPersistence.saveWirelessHotspotMode(app, mode)
             assertEquals(mode, AirPlayPersistence.loadWirelessHotspotMode(app))
             assertEquals("Pocket", AirPlayPersistence.loadExistingWifiSsid(app))
@@ -45,14 +46,16 @@ class ExistingWifiSettingsTest {
             assertEquals("Car hotspot", AirPlayPersistence.loadManualHotspotSsid(app))
             assertEquals("car-password", AirPlayPersistence.loadManualHotspotPassphrase(app))
         }
+        CarHotspotSettings.setEnabled(app, true)
+        assertFalse(CarHotspotSettings.shouldEnable(app, true, WirelessHotspotMode.EXISTING_WIFI))
     }
 
     @Test fun cancellingSetupPreservesModeAndSavingValidCredentialsSelectsLan() {
-        AirPlayPersistence.saveWirelessHotspotMode(app, WirelessHotspotMode.MANUAL)
+        AirPlayPersistence.saveWirelessHotspotMode(app, WirelessHotspotMode.WIFI_P2P)
         controls().filterIsInstance<Button>().first { it.text.contains("Same LAN") }.performClick()
         shadowOf(Looper.getMainLooper()).idle()
         ShadowAlertDialog.getLatestAlertDialog().getButton(AlertDialog.BUTTON_NEGATIVE).performClick()
-        assertEquals(WirelessHotspotMode.MANUAL, AirPlayPersistence.loadWirelessHotspotMode(app))
+        assertEquals(WirelessHotspotMode.WIFI_P2P, AirPlayPersistence.loadWirelessHotspotMode(app))
         controls().filterIsInstance<Button>().first { it.text.contains("Same LAN") }.performClick()
         shadowOf(Looper.getMainLooper()).idle()
         val dialog = ShadowAlertDialog.getLatestAlertDialog()
@@ -61,7 +64,7 @@ class ExistingWifiSettingsTest {
         fields[1].setText("short")
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).performClick()
         assertTrue(dialog.isShowing)
-        assertEquals(WirelessHotspotMode.MANUAL, AirPlayPersistence.loadWirelessHotspotMode(app))
+        assertEquals(WirelessHotspotMode.WIFI_P2P, AirPlayPersistence.loadWirelessHotspotMode(app))
         fields[1].setText("pocket-password")
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).performClick()
         assertEquals(WirelessHotspotMode.EXISTING_WIFI, AirPlayPersistence.loadWirelessHotspotMode(app))

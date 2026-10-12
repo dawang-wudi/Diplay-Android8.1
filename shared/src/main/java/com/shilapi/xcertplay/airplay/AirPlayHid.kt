@@ -45,7 +45,7 @@ object AirPlayHid {
         for (slot in 0 until TOUCH_CONTACTS) {
             val offset = slot * BYTES_PER_FINGER
             report[offset] = slot.toByte()
-            val contact = contacts.firstOrNull { it.id == slot } ?: continue
+            val contact = contacts.getOrNull(slot) ?: continue
             report[offset + 1] = if (contact.down) 0x01 else 0x00
             writeU16Le(report, offset + 2, Math.round(contact.x.coerceAtLeast(0.0)).toInt())
             writeU16Le(report, offset + 4, Math.round(contact.y.coerceAtLeast(0.0)).toInt())
@@ -108,6 +108,7 @@ object AirPlayHid {
         0x05, 0x0c, 0x0a, 0x23, 0x02, 0x0a, 0x24, 0x02, 0x95, 0x02, 0x81, 0x02,
         0x95, 0x05, 0x81, 0x01,
         0x05, 0x01, 0x09, 0x01, 0xa1, 0x00,
+        // Preserve legacy absolute X/Y. Remote focus uses the relative wheel below.
         0x09, 0x30, 0x09, 0x31, 0x15, 0x81, 0x25, 0x7f, 0x75, 0x08, 0x95, 0x02, 0x81, 0x02, 0xc0,
         0x09, 0x38, 0x15, 0x81, 0x25, 0x7f, 0x75, 0x08, 0x95, 0x01, 0x81, 0x06, 0xc0,
     )

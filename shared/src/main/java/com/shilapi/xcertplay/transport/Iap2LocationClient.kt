@@ -2,7 +2,11 @@ package com.shilapi.xcertplay.transport
 
 import com.shilapi.xcertplay.iap2.message.Iap2ControlMessages
 import com.shilapi.xcertplay.iap2.wire.Iap2Frame
+import java.util.Calendar
+import java.util.Date
+import java.util.GregorianCalendar
 import java.util.Locale
+import java.util.TimeZone
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
@@ -119,15 +123,18 @@ object NmeaLocationEncoder {
     private data class NmeaCoordinate(val value: String, val hemisphere: String)
 
     private class Timestamp(millis: Long) {
-        private val fields = java.time.Instant.ofEpochMilli(millis)
-            .atZone(java.time.ZoneOffset.UTC)
+        // java.time needs API 26; a proleptic Gregorian calendar in UTC gives the same fields.
+        private val fields = GregorianCalendar(TimeZone.getTimeZone("UTC"), Locale.US).apply {
+            gregorianChange = Date(Long.MIN_VALUE)
+            timeInMillis = millis
+        }
 
-        val hour: Int = fields.hour
-        val minute: Int = fields.minute
-        val second: Int = fields.second
-        val day: Int = fields.dayOfMonth
-        val month: Int = fields.monthValue
-        val year: Int = fields.year
+        val hour: Int = fields.get(Calendar.HOUR_OF_DAY)
+        val minute: Int = fields.get(Calendar.MINUTE)
+        val second: Int = fields.get(Calendar.SECOND)
+        val day: Int = fields.get(Calendar.DAY_OF_MONTH)
+        val month: Int = fields.get(Calendar.MONTH) + 1
+        val year: Int = fields.get(Calendar.YEAR)
     }
 
     private const val KNOTS_PER_METER_PER_SECOND = 1.94384449
@@ -136,30 +143,17 @@ object NmeaLocationEncoder {
 }
 
 /**
- * The iPhone's StartLocationInformation in one wireless session. The iPhone asks on the Bluetooth
- * iAP2 link and closes that link about 2 s later. In testing it did not ask again on the Wi-Fi
- * link, even while driving, so the Wi-Fi link carries the request on.
- */
-class Iap2LocationRequest {
-    /** The 0xFFFA parameter ids while a request is running, otherwise null. */
-    @Volatile var components: Set<Int>? = null
-}
-
-/**
  * Accessory side of iAP2 LocationInformation on one link: starts on 0xFFFA, sends the latest fix
- * on every [tick] (about once a second), stops on 0xFFFC. With [continueRequest], a request that
- * [request] recorded on the Bluetooth link starts this link too.
+ * on every [tick] (about once a second), and stops on 0xFFFC. Subscription state belongs to this
+ * iAP2 link: a request received on Bluetooth must never authorize output on the Wi-Fi tunnel.
  */
 class Iap2LocationReporter(
     private val provider: Iap2LocationProvider?,
     private val onProgress: (String) -> Unit,
-    private val request: Iap2LocationRequest? = null,
-    private val continueRequest: Boolean = false,
     private val nanoTime: () -> Long = System::nanoTime,
 ) {
     private var active = false
     private var sentLogged = false
-    private var continued = false
     private var lastAttemptNanos = 0L
 
     /** Handles 0xFFFA/0xFFFC; returns false for any other message. */
@@ -167,14 +161,12 @@ class Iap2LocationReporter(
         Iap2LocationMessages.START_LOCATION_INFORMATION -> {
             val components = Iap2LocationMessages.requestedComponents(frame)
             onProgress("iap2 rx=0xfffa start-location-information components=$components")
-            request?.components = components
             provider?.onRequested(components)
             start(send)
             true
         }
         Iap2LocationMessages.STOP_LOCATION_INFORMATION -> {
             onProgress("iap2 rx=0xfffc stop-location-information")
-            request?.components = null
             active = false
             sentLogged = false
             provider?.stop()
@@ -183,38 +175,15 @@ class Iap2LocationReporter(
         else -> false
     }
 
-    /**
-     * Sends the latest fix once a second while active; on the Wi-Fi link first takes over a Bluetooth
-     * request once. The loop calls this after every incoming message too, so it must not send each time:
-     * that sent a dozen fixes in 0.1 s at session start.
-     */
+    /** Sends the latest fix once a second while this link has an active request. */
     fun tick(send: (Iap2Frame) -> Unit) {
-        // The Bluetooth reporter receives STOP_LOCATION_INFORMATION and clears the shared request.
-        // Wi-Fi may already have taken over by then, so its active loop must observe that stop too.
-        if (continueRequest && continued && request?.components == null) {
-            active = false
-            sentLogged = false
-            return
-        }
-        if (continueRequest && !active && !continued) {
-            val components = request?.components
-            if (components != null) {
-                continued = true
-                onProgress("iap2 location request continues from the Bluetooth link components=$components")
-                provider?.onRequested(components)
-                start(send)
-                return
-            }
-        }
         if (active && sinceAttemptMillis() >= POLL_INTERVAL_MILLIS) sendLatest(send)
     }
 
-    /** Wakes the loop when the next fix is due, or every second while a Bluetooth request may still arrive. */
-    fun pollTimeout(remainingMillis: Long): Long = when {
-        active -> min(remainingMillis, (POLL_INTERVAL_MILLIS - sinceAttemptMillis()).coerceAtLeast(1))
-        continueRequest && !continued && provider != null -> min(remainingMillis, POLL_INTERVAL_MILLIS)
-        else -> remainingMillis
-    }
+    /** Wakes the loop when the next requested fix is due. */
+    fun pollTimeout(remainingMillis: Long): Long =
+        if (active) min(remainingMillis, (POLL_INTERVAL_MILLIS - sinceAttemptMillis()).coerceAtLeast(1))
+        else remainingMillis
 
     private fun sinceAttemptMillis() = (nanoTime() - lastAttemptNanos) / 1_000_000
 

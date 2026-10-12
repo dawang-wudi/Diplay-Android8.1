@@ -42,14 +42,8 @@ internal object AudioChannelMapper {
         payloadType: Int,
         mode: AudioChannelMappingMode,
         navigationStreamType: Int = DEFAULT_NAVIGATION_STREAM_TYPE,
-        siriUsesNavigation: Boolean = false,
     ): AudioChannelSelection {
         val normalized = audioType.lowercase()
-        // Change only playback routing. Keep the speechrecognition stream identity intact
-        // so microphone capture and simultaneous media/guidance streams are unaffected.
-        if (normalized == "speechrecognition" && siriUsesNavigation) {
-            return AudioChannelSelection(AudioChannel.NAVIGATION, AudioContentType.SPEECH, navigationStreamType)
-        }
         return when (mode) {
             AudioChannelMappingMode.MOBILE_COMPATIBLE -> mapMobileCompatible(normalized, payloadType, navigationStreamType)
             AudioChannelMappingMode.AUTOMOTIVE_BUS -> mapAutomotiveBus(normalized, payloadType, navigationStreamType)
@@ -58,6 +52,17 @@ internal object AudioChannelMapper {
 
     fun usesNavigationStream(audioType: String, payloadType: Int, advanced: Boolean): Boolean =
         !advanced && map(audioType, payloadType, AudioChannelMappingMode.MOBILE_COMPATIBLE).channel == AudioChannel.NAVIGATION
+
+    /**
+     * When the car Bluetooth radio is off there is no SCO, so a CarPlay telephony stream has to
+     * play on the media speaker instead of the phone usage.
+     */
+    fun playCallOnSpeaker(selection: AudioChannelSelection): AudioChannelSelection =
+        if (selection.channel == AudioChannel.PHONE) {
+            AudioChannelSelection(AudioChannel.MEDIA, AudioContentType.SPEECH, selection.streamType)
+        } else {
+            selection
+        }
 
     private fun mapMobileCompatible(
         audioType: String,

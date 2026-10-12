@@ -38,30 +38,9 @@ class MapEmbedSurfaceControlHostShadow {
 @Config(sdk = [33], shadows = [MapEmbedSurfaceControlHostShadow::class])
 @LooperMode(LooperMode.Mode.PAUSED)
 class MapEmbedServiceTest {
-    @Test @Config(sdk = [27], shadows = [])
-    fun oldAndroidRejectsMapMessagesAndShutsDownWithoutSurfaceControl() {
-        val controller = Robolectric.buildService(MapEmbedService::class.java).create()
-        val service = controller.get()
-        try {
-            val replies = mutableListOf<Message>()
-            val client = Messenger(Handler(Looper.getMainLooper()) { replies += Message.obtain(it); true })
-            val endpoint = Messenger(service.onBind(Intent(MapEmbedService.ACTION)))
-            for (kind in listOf(MapEmbedService.MSG_ATTACH, MapEmbedService.MSG_RESIZE, MapEmbedService.MSG_DETACH)) {
-                endpoint.send(Message.obtain(null, kind).apply { replyTo = client })
-                shadowOf(Looper.getMainLooper()).idle()
-                assertEquals(MapEmbedService.MSG_ERROR, replies.last().what)
-                assertEquals(MapEmbedService.ERROR_UNSUPPORTED, replies.last().data.getString(MapEmbedService.KEY_ERROR))
-            }
-            AirPlayPersistence.saveLauncherMapSharing(service, true)
-            AirPlayPersistence.saveLauncherMapSharing(service, false)
-            shadowOf(Looper.getMainLooper()).idle()
-        } finally {
-            controller.destroy()
-        }
-    }
-
     @Test fun disablingSharingReleasesAlreadyAttachedMaps() {
         MapEmbedSurfaceControlHostShadow.releases = 0
+        MapMirrors.streamAspect = MapMirrors.PHYSICAL_STREAM_ASPECT
         val controller = Robolectric.buildService(MapEmbedService::class.java).create()
         val service = controller.get()
         try {
@@ -86,6 +65,13 @@ class MapEmbedServiceTest {
             val video = root.getChildAt(0) as android.view.TextureView
             video.surfaceTextureListener!!.onSurfaceTextureAvailable(android.graphics.SurfaceTexture(0), 1200, 450)
             assertTrue(MapMirrors.launcherShowsMap)
+            video.layout(0, 0, 1200, 450)
+            MapMirrors.streamAspect = MapMirrors.VIRTUAL_STREAM_ASPECT
+            shadowOf(Looper.getMainLooper()).idle()
+            val matrix = FloatArray(9)
+            video.getTransform(android.graphics.Matrix()).getValues(matrix)
+            assertEquals("An existing launcher surface must follow negotiated geometry", 1.5f,
+                matrix[android.graphics.Matrix.MSCALE_Y], 0.001f)
             AirPlayPersistence.saveLauncherMapSharing(service, false)
             shadowOf(Looper.getMainLooper()).idle()
             assertTrue("Turning sharing off must release existing launcher maps", embeds.isEmpty())
@@ -107,6 +93,7 @@ class MapEmbedServiceTest {
             assertTrue(embeds.isEmpty())
         } finally {
             controller.destroy()
+            MapMirrors.streamAspect = MapMirrors.PHYSICAL_STREAM_ASPECT
         }
     }
 }

@@ -4,6 +4,9 @@ import android.app.Activity
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -38,6 +41,7 @@ import com.shilapi.xcertplay.airplay.VideoInCar
 import com.shilapi.xcertplay.host.R
 import java.util.Locale
 import androidx.media3.ui.R as Media3R
+import kotlin.math.roundToInt
 
 /**
  * The car's own player for iOS 27 video in car (see [CarPlayVideo]). Full screen over CarPlay, which
@@ -264,6 +268,7 @@ class CarPlayVideoActivity : Activity() {
         loadedUrl = url
         prepared = false
         encryptionLogged = false
+        Log.i(TAG, "loading video scheme=${Uri.parse(url).scheme.orEmpty()} ${playbackNetworkSummary()}")
         val item = MediaItem.Builder().setUri(url)
             .apply { if (CarPlayVideo.streaming) setMimeType(MimeTypes.APPLICATION_M3U8) }
             .build()
@@ -310,6 +315,22 @@ class CarPlayVideoActivity : Activity() {
     private fun causes(error: Throwable): String = generateSequence(error) { it.cause }.take(4)
         .joinToString(" <- ") { "${it.javaClass.simpleName}(${it.message?.replace(Regex("\\w+://\\S+"), "<url>")})" }
 
+    private fun playbackNetworkSummary(): String {
+        val manager = getSystemService(ConnectivityManager::class.java)
+        val network = manager?.activeNetwork
+        val capabilities = network?.let(manager::getNetworkCapabilities)
+        if (network == null || capabilities == null) return "network=none"
+        val transports = buildList {
+            if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) add("wifi")
+            if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) add("cellular")
+            if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) add("ethernet")
+            if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN)) add("vpn")
+        }
+        return "network=${transports.ifEmpty { listOf("other") }.joinToString("+")} " +
+            "internet=${capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)} " +
+            "validated=${capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)}"
+    }
+
     override fun onDestroy() {
         main.removeCallbacks(hideControls)
         main.removeCallbacks(tick)
@@ -321,7 +342,7 @@ class CarPlayVideoActivity : Activity() {
         super.onDestroy()
     }
 
-    private fun dp(value: Int) = (value * resources.displayMetrics.density).toInt()
+    private fun dp(value: Int) = (value * resources.displayMetrics.density).roundToInt()
 
     private companion object {
         const val TAG = "DiPlay-Video"

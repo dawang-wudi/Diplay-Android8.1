@@ -15,13 +15,10 @@ android {
 
     defaultConfig {
         applicationId = "com.shihab.diplay"
-        minSdk = 27
+        minSdk = 25
         targetSdk = 37
-        versionCode = 46
-        versionName = "0.2.10"
-        ndk {
-            abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
-        }
+        versionCode = 37
+        versionName = "0.2.18"
 
     }
 
@@ -42,10 +39,8 @@ android {
 
     buildTypes {
         debug {
-            // Distinct from the released `.ora81` package so a locally built APK installs next to
-            // the released one instead of failing on the signing key mismatch.
-            applicationIdSuffix = ".wudi81v15"
-            versionNameSuffix = "-android81-test16-mic-universal"
+            applicationIdSuffix = ".hudtest"
+            versionNameSuffix = "-hud-test"
         }
         release {
             optimization {

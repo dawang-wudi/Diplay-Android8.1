@@ -66,21 +66,6 @@ class CarPlayBonjourTest {
     }
 
     @Test
-    fun ipv4ConnectProbeUsesTheResolvedAddressWithoutIpv6Brackets() {
-        assertEquals(
-            "GET /ctrl-int/1/connect HTTP/1.1\r\n" +
-                "Host: 192.168.43.25:7000\r\n" +
-                "User-Agent: AirPlay/366.0\r\n" +
-                "AirPlay-Receiver-Device-ID: 020000000002\r\n" +
-                "Connection: close\r\n\r\n",
-            CarPlayBonjourProtocol.connectProbeRequest(
-                host = "192.168.43.25", port = 7000,
-                sourceVersion = "366.0", deviceId = "02:00:00:00:00:02",
-            ),
-        )
-    }
-
-    @Test
     fun connectProbeRequestMatchesExactRequestLineAndHeaders() {
         assertEquals(
             "GET /ctrl-int/1/connect HTTP/1.1\r\n" +

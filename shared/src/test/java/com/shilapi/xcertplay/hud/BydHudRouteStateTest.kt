@@ -49,6 +49,63 @@ class BydHudRouteStateTest {
     }
 
     @Test
+    fun `overlay keeps the last instruction across a NoRouteSet handoff`() {
+        val state = populatedState(keepAcrossNoRoute = true)
+        val before = state.current()
+
+        val change = state.accept(BydHudRouteState.ROUTE_GUIDANCE_UPDATE, tlvs(tlv(0x01, 0)))
+
+        assertEquals(BydHudRouteChange.NONE, change)
+        assertEquals(before, state.current())
+    }
+
+    @Test
+    fun `overlay hides the card shortly after the driver ends guidance`() {
+        // #511: cancelling a route sends NoRouteSet while the session stays up.
+        var now = 0L
+        val state = populatedState({ now }, keepAcrossNoRoute = true)
+        state.accept(BydHudRouteState.ROUTE_GUIDANCE_UPDATE, tlvs(tlv(0x01, 0)))
+        now = 4_000_000_000L
+        state.accept(BydHudRouteState.ROUTE_GUIDANCE_UPDATE, tlvs(tlv(0x01, 0)))
+        assertEquals(25, state.current()!!.distanceMeters)
+        now = 5_000_000_000L
+        assertNull(state.current())
+    }
+
+    @Test
+    fun `guidance after NoRouteSet keeps the card`() {
+        var now = 0L
+        val state = populatedState({ now }, keepAcrossNoRoute = true)
+        state.accept(BydHudRouteState.ROUTE_GUIDANCE_UPDATE, tlvs(tlv(0x01, 0)))
+        now = 1_000_000_000L
+        state.accept(BydHudRouteState.ROUTE_GUIDANCE_UPDATE, tlvs(tlv(0x01, 1), tlv(0x0a, 0, 0, 0, 20)))
+        now = 10_000_000_000L
+        assertEquals(20, state.current()!!.distanceMeters)
+    }
+
+    @Test
+    fun `a wireless drop keeps the card through NoRouteSet before and after it`() {
+        var now = 0L
+        val state = populatedState({ now }, keepAcrossNoRoute = true)
+        state.accept(BydHudRouteState.ROUTE_GUIDANCE_UPDATE, tlvs(tlv(0x01, 0)))
+        state.holdAcrossDrop()
+        now = 10_000_000_000L
+        state.accept(BydHudRouteState.ROUTE_GUIDANCE_UPDATE, tlvs(tlv(0x01, 0)))
+        now = 20_000_000_000L
+        assertEquals(25, state.current()!!.distanceMeters)
+    }
+
+    @Test
+    fun `overlay still clears on arrival even when NoRouteSet is ignored`() {
+        val state = populatedState(keepAcrossNoRoute = true)
+
+        val change = state.accept(BydHudRouteState.ROUTE_GUIDANCE_UPDATE, tlvs(tlv(0x01, 2)))
+
+        assertEquals(BydHudRouteChange.CLEAR, change)
+        assertNull(state.current())
+    }
+
+    @Test
     fun `malformed frame does not alter active guidance`() {
         val state = populatedState()
         val before = state.current()
@@ -87,7 +144,7 @@ class BydHudRouteStateTest {
     @Test
     fun `brief empty maneuver list keeps guidance and a lasting one hides it without losing maneuvers`() {
         var now = 0L
-        val state = populatedState { now }
+        val state = populatedState(nanoTime = { now })
 
         assertEquals(BydHudRouteChange.NONE, state.accept(BydHudRouteState.ROUTE_GUIDANCE_UPDATE, tlvs(tlv(0x01, 5), tlv(0x0d))))
         now = 2_000_000_000L
@@ -128,7 +185,7 @@ class BydHudRouteStateTest {
     @Test
     fun `silent route expires and fresh update restores cached maneuver`() {
         var now = 0L
-        val state = populatedState { now }
+        val state = populatedState(nanoTime = { now })
         now = 30_000_000_000L
         assertNull(state.current())
         state.accept(BydHudRouteState.ROUTE_GUIDANCE_UPDATE, tlvs(tlv(0x0a, 0, 0, 0, 20)))
@@ -146,8 +203,11 @@ class BydHudRouteStateTest {
     private fun utf8z(value: String): IntArray =
         (value.toByteArray(Charsets.UTF_8).map { it.toInt() and 0xff } + 0).toIntArray()
 
-    private fun populatedState(nanoTime: () -> Long = System::nanoTime): BydHudRouteState =
-        BydHudRouteState(nanoTime).also { state ->
+    private fun populatedState(
+        nanoTime: () -> Long = System::nanoTime,
+        keepAcrossNoRoute: Boolean = false,
+    ): BydHudRouteState =
+        BydHudRouteState(nanoTime, keepAcrossNoRoute = keepAcrossNoRoute).also { state ->
         state.accept(
             BydHudRouteState.ROUTE_GUIDANCE_MANEUVER_UPDATE,
             tlvs(tlv(0x01, 0, 1), tlv(0x03, 2), tlv(0x08, 0)),

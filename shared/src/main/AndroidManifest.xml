@@ -1,23 +1,20 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <!-- Lets DiPlay register a self-managed call with Telecom; a normal permission, no prompt. -->
+    <uses-permission android:name="android.permission.MANAGE_OWN_CALLS" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
-    <!-- Declared so the app appears under Special access -> Modify system settings. The app-op is
-         what CarHotspotEnabler is actually granted; without this line there is no page to grant it. -->
-    <uses-permission
-        android:name="android.permission.WRITE_SETTINGS"
-        tools:ignore="ProtectedPermissions" />
     <uses-permission
         android:name="android.permission.NEARBY_WIFI_DEVICES"
         android:usesPermissionFlags="neverForLocation" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_LOCAL_NETWORK" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
     <uses-permission
         android:name="android.permission.BLUETOOTH"
@@ -31,12 +28,17 @@
         android:required="false" />
 
     <queries>
+        <package android:name="com.byd.carsettings" />
+        <package android:name="com.byd.appmgr" />
+        <package android:name="com.byd.deviceinfo" />
+        <package android:name="com.byd.service" />
         <intent>
             <action android:name="android.settings.WIFI_SETTINGS" />
         </intent>
         <package android:name="com.byd.clusterdebug" />
         <package android:name="com.ts.car.someip.service" />
         <package android:name="com.byd.amapservice" />
+        <package android:name="com.byd.automap" />
         <intent>
             <action android:name="com.android.settings.WIFI_TETHER_SETTINGS" />
         </intent>
@@ -62,5 +64,15 @@
             android:name="com.shilapi.xcertplay.network.CarPlayVpnService"
             android:permission="android.permission.BIND_VPN_SERVICE"
             android:exported="false" />
+
+        <!-- Only Telecom can bind it; it carries no UI or audio, see PhoneAudioRoute. -->
+        <service
+            android:name="com.shilapi.xcertplay.telecom.PhoneAudioConnectionService"
+            android:permission="android.permission.BIND_TELECOM_CONNECTION_SERVICE"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.telecom.ConnectionService" />
+            </intent-filter>
+        </service>
     </application>
 </manifest>

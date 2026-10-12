@@ -56,15 +56,13 @@ class MapEmbedService : Service() {
         destroyed = true
         stopObservingSharing?.invoke()
         stopObservingSharing = null
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            embeds.values.toList().forEach { it.release() }
-        }
+        embeds.values.toList().forEach { it.release() }
         embeds.clear()
         super.onDestroy()
     }
 
     private fun revokeSharing() {
-        if (destroyed || Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return
+        if (destroyed) return
         val attached = embeds.values.toList()
         embeds.clear()
         attached.forEach { it.sharingDisabled() }
@@ -73,10 +71,6 @@ class MapEmbedService : Service() {
     private fun handle(message: Message) {
         val client = message.replyTo ?: return
         val caller = packageManager.getNameForUid(message.sendingUid) ?: "uid ${message.sendingUid}"
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
-            refuse(client, caller, ERROR_UNSUPPORTED)
-            return
-        }
         when (message.what) {
             MSG_ATTACH -> attach(client, caller, message.data)
             MSG_RESIZE -> embeds[client.binder]?.resize(message.data.getInt(KEY_WIDTH), message.data.getInt(KEY_HEIGHT))
@@ -126,9 +120,7 @@ class MapEmbedService : Service() {
         try {
             client.send(Message.obtain(null, what).apply { this.data = data })
         } catch (_: RemoteException) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                embeds.remove(client.binder)?.release()
-            }
+            embeds.remove(client.binder)?.release()
         }
     }
 
@@ -172,6 +164,9 @@ class MapEmbedService : Service() {
                 }
             }
         }
+        private val aspectListener: () -> Unit = {
+            if (!released) cropToFill(video, video.width, video.height)
+        }
         private val streamListener: (Boolean) -> Unit = { active ->
             waiting.visibility = if (active) TextView.GONE else TextView.VISIBLE
             send(client, MSG_STREAM_STATE, Bundle().apply { putBoolean(KEY_STREAM_ACTIVE, active) })
@@ -191,6 +186,7 @@ class MapEmbedService : Service() {
         init {
             waiting.visibility = if (MapMirrors.streamActive) TextView.GONE else TextView.VISIBLE
             MapMirrors.addStreamListener(streamListener)
+            MapMirrors.addAspectListener(aspectListener)
             host.setView(root, width.coerceAtLeast(1), height.coerceAtLeast(1))
         }
 
@@ -202,6 +198,7 @@ class MapEmbedService : Service() {
             if (released) return
             released = true
             MapMirrors.removeStreamListener(streamListener)
+            MapMirrors.removeAspectListener(aspectListener)
             MapMirrors.set(key, null)
             host.release()
         }
@@ -241,11 +238,11 @@ class MapEmbedService : Service() {
         const val ERROR_UNSUPPORTED = "unsupported" // Android 10 or older
         const val ERROR_BAD_REQUEST = "bad_request"
 
-        /** Keeps the stream's 8:3 shape and fills the view, cutting the edges that do not fit. */
+        /** Keeps the stream's shape (8:3 or 16:9) and fills the view, cutting the edges that do not fit. */
         internal fun cropToFill(view: TextureView, width: Int, height: Int) {
             if (width <= 0 || height <= 0) return
             val viewAspect = width.toFloat() / height
-            val stream = MapMirrors.STREAM_ASPECT.toFloat()
+            val stream = MapMirrors.streamAspect.toFloat()
             val scaleX = if (viewAspect < stream) stream / viewAspect else 1f
             val scaleY = if (viewAspect > stream) viewAspect / stream else 1f
             view.setTransform(Matrix().apply { setScale(scaleX, scaleY, width / 2f, height / 2f) })

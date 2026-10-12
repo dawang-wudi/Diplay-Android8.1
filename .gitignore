@@ -6,6 +6,7 @@
 # Gradle and local tooling
 .gradle/
 .kotlin/
+.android-sdk/
 build/
 local.properties
 
@@ -38,4 +39,3 @@ release-signing.properties
 *.key
 *.apk
 *.aab
-.workbuddy-ai/

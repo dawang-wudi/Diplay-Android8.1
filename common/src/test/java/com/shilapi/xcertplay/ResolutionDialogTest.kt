@@ -16,7 +16,7 @@ import org.robolectric.shadows.ShadowAlertDialog
 import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [27, 33], manifest = Config.NONE)
+@Config(sdk = [33], manifest = Config.NONE)
 class ResolutionDialogTest {
     @Test @Config(qualifiers = "zh-rCN") fun chineseDialogs() = numericDialogsKeepNaturalHeightWhenResetting()
     @Test @Config(qualifiers = "ar") fun arabicDialogs() = numericDialogsKeepNaturalHeightWhenResetting()

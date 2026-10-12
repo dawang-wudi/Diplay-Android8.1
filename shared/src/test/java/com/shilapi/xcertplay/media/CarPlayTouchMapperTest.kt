@@ -10,7 +10,6 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [29], manifest = Config.NONE)
 class CarPlayTouchMapperTest {
-    private val mapper = CarPlayTouchMapper()
     private val content = CarPlayVideoLayout.fit(1920, 990, 1920, 942)
 
     @Test fun contentCornersMapToCanvasCorners() {
@@ -45,7 +44,7 @@ class CarPlayTouchMapperTest {
     @Test fun fullViewOverloadKeepsExistingCoordinates() {
         val event = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 480f, 247.5f, 0)
         try {
-            val contact = mapper.contacts(event, 1920, 990).single()
+            val contact = CarPlayTouchMapper.contacts(event, 1920, 990).single()
             assertEquals(0.25, contact.x, 1e-6)
             assertEquals(0.25, contact.y, 1e-6)
         } finally {
@@ -55,7 +54,7 @@ class CarPlayTouchMapperTest {
 
     private fun contact(action: Int, x: Float, y: Float) = MotionEvent.obtain(0, 0, action, x, y, 0).let {
         try {
-            mapper.contacts(it, content).single()
+            CarPlayTouchMapper.contacts(it, content).single()
         } finally {
             it.recycle()
         }

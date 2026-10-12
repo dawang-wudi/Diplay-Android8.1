@@ -25,27 +25,6 @@ import java.util.concurrent.Executor
 @Config(sdk = [32], manifest = Config.NONE,
     shadows = [LocalOnlyHotspotManagerTest.Radio::class, LocalOnlyHotspotManagerTest.Reservation::class])
 class LocalOnlyHotspotManagerTest {
-    @Test @Config(sdk = [27])
-    fun android81ReadsLegacyHotspotBssidWithoutAndroid9MacAddress() {
-        val context = RuntimeEnvironment.getApplication()
-        val manager = LocalOnlyHotspotManager(context)
-        try {
-            val configuration = android.net.wifi.WifiConfiguration().apply {
-                SSID = "Test car"
-                preSharedKey = "test-password"
-                BSSID = "02:12:34:56:78:9a"
-                allowedKeyManagement.set(android.net.wifi.WifiConfiguration.KeyMgmt.WPA2_PSK)
-            }
-            val method = manager.javaClass.getDeclaredMethod("readWifiConfiguration", configuration.javaClass)
-                .apply { isAccessible = true }
-            val result = method.invoke(manager, configuration)
-            val bytes = result.javaClass.getDeclaredField("bssidBytes").apply { isAccessible = true }.get(result)
-            assertArrayEquals(byteArrayOf(2, 0x12, 0x34, 0x56, 0x78, 0x9a.toByte()), bytes as ByteArray)
-        } finally {
-            manager.close()
-        }
-    }
-
     @Test fun cancelledStartupStillClosesALateSystemReservation() = lateReservation(cancel = true)
     @Test fun timedOutStartupStillClosesALateSystemReservation() = lateReservation(cancel = false)
 

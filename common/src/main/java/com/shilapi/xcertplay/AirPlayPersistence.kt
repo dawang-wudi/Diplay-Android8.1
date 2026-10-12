@@ -2,11 +2,12 @@ package com.shilapi.xcertplay
 
 import android.content.Context
 import android.os.Build
-import com.shilapi.xcertplay.host.R
 import com.shilapi.xcertplay.airplay.AirPlayDisplaySettings
 import com.shilapi.xcertplay.airplay.AirPlayPhysicalSizeBasis
 import com.shilapi.xcertplay.airplay.CarPlayDisplayScale
 import com.shilapi.xcertplay.airplay.CarPlayClusterDisplay
+import com.shilapi.xcertplay.airplay.ClusterSpeedometerOverlay
+import com.shilapi.xcertplay.airplay.ClusterTurnCardOverlay
 import com.shilapi.xcertplay.airplay.CarPlayUiScale
 import com.shilapi.xcertplay.airplay.AirPlayIdentity
 import com.shilapi.xcertplay.airplay.PairingStore
@@ -16,6 +17,7 @@ import com.shilapi.xcertplay.orchestration.ManualHotspotBand
 import com.shilapi.xcertplay.orchestration.ManualHotspotSecurity
 import com.shilapi.xcertplay.orchestration.MfiTarget
 import com.shilapi.xcertplay.orchestration.WirelessHotspotMode
+import com.shilapi.xcertplay.network.WifiP2pChannels
 import com.shilapi.xcertplay.transport.LockdownPairRecord
 import java.io.File
 
@@ -43,11 +45,14 @@ object AirPlayPersistence {
     private const val KEY_HEVC_SOFTWARE_DECODER = "hevc_software_decoder"
     private const val KEY_ADVANCED_AUDIO_CHANNEL_MAPPING = "advanced_audio_channel_mapping"
     private const val KEY_AUDIO_FOCUS_ENABLED = "audio_focus_enabled"
+    private const val KEY_AUDIO_FOCUS_AUTO_YIELD = "audio_focus_auto_yield"
+    private const val KEY_DISABLE_MEDIA_KEY_AUDIO_FOCUS = "disable_media_key_audio_focus"
     private const val KEY_MEDIA_AUDIO_CHANNEL = "media_audio_channel"
     private const val KEY_NAVIGATION_AUDIO_CHANNEL = "navigation_audio_channel"
     private const val KEY_NAVIGATION_STREAM_TYPE = "navigation_stream_type"
     private const val KEY_WIRELESS_ENABLED = "wireless_enabled"
     private const val KEY_WIRELESS_HOTSPOT_MODE = "wireless_hotspot_mode"
+    private const val KEY_WIFI_P2P_PREFERRED_CHANNEL = "wifi_p2p_preferred_channel"
     private const val KEY_MANUAL_HOTSPOT_SSID = "manual_hotspot_ssid"
     private const val KEY_MANUAL_HOTSPOT_PASSPHRASE = "manual_hotspot_passphrase"
     private const val KEY_MANUAL_HOTSPOT_BAND = "manual_hotspot_band"
@@ -57,17 +62,39 @@ object AirPlayPersistence {
     private const val KEY_MANUFACTURER = "manufacturer"
     private const val KEY_MODEL = "model"
     private const val KEY_OEM_LABEL = "oem_label"
+    private const val KEY_APP_APPEARANCE = "app_appearance"
     private const val KEY_CARPLAY_NIGHT_MODE = "carplay_night_mode"
+    private const val KEY_CARPLAY_NIGHT_START = "carplay_night_start_minute"
+    private const val KEY_CARPLAY_NIGHT_END = "carplay_night_end_minute"
     private const val KEY_AMBIENT_LUX_THRESHOLD = "ambient_lux_threshold"
     private const val KEY_FPS = "display_fps"
     private const val KEY_MEDIA_BUFFER_MS = "media_buffer_ms"
+    private const val KEY_MAIN_BUFFERED_AUDIO = "main_buffered_audio"
+    private const val KEY_SPEECH_WITHOUT_8_16_KHZ = "speech_without_8_16_khz"
+    private const val KEY_CAR_BLUETOOTH_AUDIO = "car_bluetooth_audio"
+    private const val KEY_CALL_ECHO_CANCELLATION = "call_echo_cancellation"
+    private const val KEY_CALL_VOICE_FILTER = "call_voice_filter"
+    private const val KEY_SMOOTH_VIDEO = "smooth_video"
+    private const val KEY_MTK_DECODER_TUNING = "mtk_decoder_tuning"
+    private const val KEY_DIRECT_VIDEO_OUTPUT = "direct_video_output"
+    private const val KEY_LOW_LATENCY_DECODER = "low_latency_decoder"
+    private const val KEY_FPS_COUNTER = "fps_counter"
     private const val KEY_CLUSTER_MAP = "cluster_map_enabled"
+    private const val KEY_ADB_CLUSTER_ACTIVITY = "adb_cluster_activity_enabled"
     private const val KEY_CENTER_MAP_OVERLAY = "center_map_overlay"
+    private const val KEY_CENTER_MAP_AUTO_HIDE = "center_map_auto_hide"
     private const val KEY_LAUNCHER_MAP_SHARING = "launcher_map_sharing"
     private const val KEY_CLUSTER_MAP_SCALE = "cluster_map_scale_percent"
     private const val KEY_CLUSTER_CONTENT = "cluster_content"
     private const val KEY_CLUSTER_MARKER_X = "cluster_marker_horizontal_step"
     private const val KEY_CLUSTER_MARKER_Y = "cluster_marker_vertical_step"
+    private const val KEY_CLUSTER_SMALL_WINDOW_MODE = "cluster_small_window_mode"
+    private const val KEY_CLUSTER_SMALL_WINDOW_MARKER_X = "cluster_small_window_marker_x"
+    private const val KEY_CLUSTER_SMALL_WINDOW_MARKER_Y = "cluster_small_window_marker_y"
+    private const val KEY_CLUSTER_TURN_CARD_OVERLAY_POSITION = "cluster_turn_card_overlay_position"
+    private const val KEY_CLUSTER_TURN_CARD_OVERLAY_SIZE = "cluster_turn_card_overlay_size"
+    private const val KEY_CLUSTER_TURN_CARD_OVERLAY_X = "cluster_turn_card_overlay_x_percent"
+    private const val KEY_CLUSTER_TURN_CARD_OVERLAY_Y = "cluster_turn_card_overlay_y_percent"
     private const val KEY_CENTER_MAP_FOLLOWS_DASHBOARD = "center_map_follows_dashboard"
     private const val KEY_SETTINGS_GESTURE_FINGERS = "settings_gesture_fingers"
     private const val KEY_WIDTH_PHYSICAL_MM = "display_width_physical_mm"
@@ -77,12 +104,17 @@ object AirPlayPersistence {
     private const val KEY_RIGHT_HAND_DRIVE = "right_hand_drive"
     private const val KEY_HIDE_TOP_BAR = "hide_top_bar"
     private const val KEY_HIDE_BOTTOM_BAR = "hide_bottom_bar"
+    private const val KEY_HARMAN_FULLSCREEN = "harman_fullscreen"
     private const val KEY_SAFE_AREA_DRAW_OUTSIDE = "safe_area_draw_outside"
+    private const val KEY_MAIN_DISPLAY_DISABLE_SAFE_AREA = "main_display_disable_safe_area"
     private const val KEY_ADAPT_PIP_RESOLUTION = "adapt_pip_resolution"
     private const val KEY_AUTO_START_ON_BOOT = "auto_start_on_boot"
-    private const val KEY_AUTO_ENABLE_CAR_HOTSPOT = "auto_enable_car_hotspot"
-    private const val KEY_USE_IPHONE_MICROPHONE = "use_iphone_microphone"
+    private const val KEY_BT_SUSPEND_DURING_CARPLAY = "bt_suspend_during_carplay"
+    private const val KEY_HIDE_BYD_CALL_POPUP = "hide_byd_call_popup"
+    private const val KEY_BT_SUSPEND_DELAY = "bt_suspend_delay_seconds"
     private const val KEY_LOCATION_REPORTING_ENABLED = "location_reporting_enabled"
+    private const val KEY_EXTERNAL_CONTROLLER = "external_controller"
+    private const val KEY_USB_CHARGING_CURRENT = "usb_charging_current"
     private const val KEY_MFI_TARGET = "mfi_target"
     private const val KEY_MFI_I2C_PATH = "mfi_i2c_path"
     private const val KEY_REMOTE_MFI_SERVER = "remote_mfi_server"
@@ -92,7 +124,7 @@ object AirPlayPersistence {
 
     const val DEFAULT_MANUFACTURER = "DiPlay"
     const val DEFAULT_MODEL = "DiPlay"
-    const val DEFAULT_OEM_LABEL = "返回车机"
+    const val DEFAULT_OEM_LABEL = "BYD"
     const val DEFAULT_MFI_I2C_PATH = "/dev/i2c-1"
 
     fun loadAmbientDelaySeconds(context: Context): Int =
@@ -116,6 +148,22 @@ object AirPlayPersistence {
                 percent.coerceIn(CarPlayDisplayScale.MIN_PERCENT, CarPlayDisplayScale.MAX_PERCENT),
             ).apply()
     }
+    /** Applied by the CarPlay host so overlay position/size updates without reconnecting. */
+    @Volatile var overlaySettingsListener: (() -> Unit)? = null
+
+    private const val KEY_CLUSTER_TURN_CARD_OVERLAY_SIZE_PERCENT = "cluster_turn_card_overlay_size_percent"
+    private const val KEY_CLUSTER_TURN_CARD_OPACITY = "cluster_turn_card_opacity_percent"
+    private const val KEY_CLUSTER_MARKER_X_PERCENT = "cluster_marker_x_percent"
+    private const val KEY_CLUSTER_MARKER_Y_PERCENT = "cluster_marker_y_percent"
+    private const val KEY_CLUSTER_SMALL_WINDOW_MARKER_X_PERCENT = "cluster_small_window_marker_x_percent"
+    private const val KEY_CLUSTER_SMALL_WINDOW_MARKER_Y_PERCENT = "cluster_small_window_marker_y_percent"
+    private const val KEY_CLUSTER_TURN_CARD_THEME = "cluster_turn_card_theme"
+    private const val KEY_CLUSTER_SMALL_WINDOW_CARD_THEME = "cluster_small_window_card_theme"
+    private const val KEY_CLUSTER_SMALL_WINDOW_CARD_SIZE = "cluster_small_window_card_size"
+    private const val KEY_CLUSTER_SMALL_WINDOW_CARD_X = "cluster_small_window_card_x"
+    private const val KEY_CLUSTER_SMALL_WINDOW_CARD_Y = "cluster_small_window_card_y"
+    private const val KEY_CLUSTER_SMALL_WINDOW_CARD_OPACITY = "cluster_small_window_card_opacity_percent"
+
     fun loadDisplayScaleTenths(context: Context): Int {
         val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         return CarPlayDisplayScale.sanitize(
@@ -189,23 +237,25 @@ object AirPlayPersistence {
             .apply()
     }
 
-    fun loadNavigationAudioFocusEnabled(context: Context): Boolean =
+    fun loadAudioFocusAutoYield(context: Context): Boolean =
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-            .getBoolean("navigation_audio_focus_enabled", true)
+            .getBoolean(KEY_AUDIO_FOCUS_AUTO_YIELD, true)
 
-    fun saveNavigationAudioFocusEnabled(context: Context, enabled: Boolean) {
+    fun saveAudioFocusAutoYield(context: Context, enabled: Boolean) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
-            .putBoolean("navigation_audio_focus_enabled", enabled).apply()
+            .putBoolean(KEY_AUDIO_FOCUS_AUTO_YIELD, enabled)
+            .apply()
     }
 
-    fun loadSiriUsesNavigation(context: Context): Boolean =
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(
-            "siri_uses_navigation", context.resources.getBoolean(R.bool.config_siri_uses_navigation),
-        )
+    /** Opt-out for head units that route physical volume buttons to DiPlay's focus owner. */
+    fun loadDisableMediaKeyAudioFocus(context: Context): Boolean =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getBoolean(KEY_DISABLE_MEDIA_KEY_AUDIO_FOCUS, false)
 
-    fun saveSiriUsesNavigation(context: Context, enabled: Boolean) {
+    fun saveDisableMediaKeyAudioFocus(context: Context, disabled: Boolean) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
-            .putBoolean("siri_uses_navigation", enabled).apply()
+            .putBoolean(KEY_DISABLE_MEDIA_KEY_AUDIO_FOCUS, disabled)
+            .apply()
     }
 
     fun loadMediaAudioChannel(context: Context): Int =
@@ -288,25 +338,33 @@ object AirPlayPersistence {
             .apply()
     }
 
-    fun availableWirelessHotspotModes(): List<WirelessHotspotMode> =
-        // Basic group creation and owner credentials are available on Android 8.1 too.
-        listOf(WirelessHotspotMode.MANUAL, WirelessHotspotMode.WIFI_P2P, WirelessHotspotMode.EXISTING_WIFI)
-
     fun loadWirelessHotspotMode(context: Context): WirelessHotspotMode {
         val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         val stored = prefs.getString(KEY_WIRELESS_HOTSPOT_MODE, null)
         val mode = WirelessHotspotMode.entries.firstOrNull { it.name == stored }
             ?: WirelessHotspotMode.MANUAL
-        val supported = mode.takeIf { it in availableWirelessHotspotModes() } ?: WirelessHotspotMode.MANUAL
+        val supported = if (mode == WirelessHotspotMode.LOCAL_ONLY_HOTSPOT) WirelessHotspotMode.MANUAL else mode
         if (stored != supported.name) saveWirelessHotspotMode(context, supported)
         return supported
     }
 
     fun saveWirelessHotspotMode(context: Context, mode: WirelessHotspotMode) {
-        val supported = mode.takeIf { it in availableWirelessHotspotModes() } ?: WirelessHotspotMode.MANUAL
+        val supported = if (mode == WirelessHotspotMode.LOCAL_ONLY_HOTSPOT) WirelessHotspotMode.MANUAL else mode
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
             .putString(KEY_WIRELESS_HOTSPOT_MODE, supported.name)
             .apply()
+    }
+
+    fun loadWifiP2pPreferredChannel(context: Context): Int = runCatching {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getInt(KEY_WIFI_P2P_PREFERRED_CHANNEL, WifiP2pChannels.AUTO)
+            .takeIf(WifiP2pChannels::isValid) ?: WifiP2pChannels.AUTO
+    }.getOrDefault(WifiP2pChannels.AUTO)
+
+    fun saveWifiP2pPreferredChannel(context: Context, channel: Int) {
+        require(WifiP2pChannels.isValid(channel))
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putInt(KEY_WIFI_P2P_PREFERRED_CHANNEL, channel).apply()
     }
 
     fun loadExistingWifiSsid(context: Context): String =
@@ -406,38 +464,49 @@ object AirPlayPersistence {
             .apply()
     }
 
-    /**
-     * Whether a wireless session should turn the head unit's own hotspot on before waiting for it.
-     *
-     * Builds whose firmware starts the hotspot by itself keep the base default of false; the mobile
-     * build overrides `config_auto_enable_car_hotspot`. A saved choice always wins.
-     */
-    fun loadAutoEnableCarHotspot(context: Context): Boolean =
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(
-            KEY_AUTO_ENABLE_CAR_HOTSPOT,
-            context.resources.getBoolean(R.bool.config_auto_enable_car_hotspot),
-        )
+    fun loadBtSuspendDuringCarplay(context: Context): Boolean =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getBoolean(KEY_BT_SUSPEND_DURING_CARPLAY, false)
 
-    fun saveAutoEnableCarHotspot(context: Context, enabled: Boolean) {
+    fun loadHideBydCallPopup(context: Context): Boolean =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getBoolean(KEY_HIDE_BYD_CALL_POPUP, false)
+
+    fun saveHideBydCallPopup(context: Context, enabled: Boolean) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
-            .putBoolean(KEY_AUTO_ENABLE_CAR_HOTSPOT, enabled)
-            .apply()
+            .putBoolean(KEY_HIDE_BYD_CALL_POPUP, enabled).apply()
     }
 
-    /**
-     * Whether to tell the iPhone that this head unit provides no microphone input.
-     *
-     * Off by default: a head unit with a microphone should keep using it, since it sits closer to
-     * the driver than the phone. Only useful on a head unit that has no microphone at all.
-     */
-    fun loadUseIphoneMicrophone(context: Context): Boolean =
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-            .getBoolean(KEY_USE_IPHONE_MICROPHONE, false)
-
-    fun saveUseIphoneMicrophone(context: Context, enabled: Boolean) {
+    fun saveBtSuspendDuringCarplay(context: Context, enabled: Boolean) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
-            .putBoolean(KEY_USE_IPHONE_MICROPHONE, enabled)
-            .apply()
+            .putBoolean(KEY_BT_SUSPEND_DURING_CARPLAY, enabled).apply()
+    }
+
+    fun loadBtSuspendDelaySeconds(context: Context): Int =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getInt(KEY_BT_SUSPEND_DELAY, 10).let { if (it in listOf(5, 10, 15, 30)) it else 10 }
+
+    fun saveBtSuspendDelaySeconds(context: Context, seconds: Int) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putInt(KEY_BT_SUSPEND_DELAY, if (seconds in listOf(5, 10, 15, 30)) seconds else 10).apply()
+    }
+
+    /** Keys from a paired keyboard, remote or rotary controller drive CarPlay's knob alongside touch. */
+    fun loadExternalController(context: Context): Boolean =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(KEY_EXTERNAL_CONTROLLER, false)
+
+    fun saveExternalController(context: Context, enabled: Boolean) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putBoolean(KEY_EXTERNAL_CONTROLLER, enabled).apply()
+    }
+
+    fun loadUsbChargingCurrent(context: Context): UsbChargingCurrent = UsbChargingCurrent.fromKey(
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(KEY_USB_CHARGING_CURRENT, null),
+    )
+
+    fun saveUsbChargingCurrent(context: Context, current: UsbChargingCurrent) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putString(KEY_USB_CHARGING_CURRENT, current.key).apply()
     }
 
     fun loadLocationReportingEnabled(context: Context): Boolean =
@@ -474,16 +543,11 @@ object AirPlayPersistence {
             .apply()
     }
 
-    fun loadOemLabel(context: Context): String {
-        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-        val saved = prefs.getString(KEY_OEM_LABEL, null).orEmpty()
-        // Earlier builds could persist the upstream or ORA default when saving unrelated settings.
-        val legacy = saved.trim().equals("BYD", ignoreCase = true) ||
-            saved.trim() in setOf("比亚迪", "比亞迪", "欧拉", "歐拉")
-        if (legacy) prefs.edit().putString(KEY_OEM_LABEL, DEFAULT_OEM_LABEL).apply()
-        // iOS hides the car icon without a label. Preserve other user-chosen names.
-        return if (legacy || saved.isBlank()) DEFAULT_OEM_LABEL else saved
-    }
+    fun loadOemLabel(context: Context): String =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getString(KEY_OEM_LABEL, DEFAULT_OEM_LABEL)
+            // iOS hides the car icon without a label.
+            .orEmpty().ifBlank { DEFAULT_OEM_LABEL }
 
     fun saveOemLabel(context: Context, oemLabel: String) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
@@ -501,6 +565,15 @@ object AirPlayPersistence {
             .putInt(KEY_AMBIENT_LUX_THRESHOLD, threshold.lux).apply()
     }
 
+    fun loadAppAppearance(context: Context): AppAppearance = AppAppearance.fromKey(
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(KEY_APP_APPEARANCE, null),
+    )
+
+    fun saveAppAppearance(context: Context, appearance: AppAppearance) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putString(KEY_APP_APPEARANCE, appearance.key).apply()
+    }
+
     fun loadCarPlayNightMode(context: Context): CarPlayNightMode = CarPlayNightMode.fromKey(
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(KEY_CARPLAY_NIGHT_MODE, null),
     )
@@ -508,6 +581,24 @@ object AirPlayPersistence {
     fun saveCarPlayNightMode(context: Context, mode: CarPlayNightMode) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
             .putString(KEY_CARPLAY_NIGHT_MODE, mode.key).apply()
+    }
+
+    fun loadCarPlayNightSchedule(context: Context): CarPlayNightSchedule {
+        val preferences = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        val defaults = CarPlayNightSchedule()
+        val start = preferences.getInt(KEY_CARPLAY_NIGHT_START, defaults.startMinute)
+        val end = preferences.getInt(KEY_CARPLAY_NIGHT_END, defaults.endMinute)
+        return CarPlayNightSchedule(
+            start.takeIf { it in 0 until 24 * 60 } ?: defaults.startMinute,
+            end.takeIf { it in 0 until 24 * 60 } ?: defaults.endMinute,
+        )
+    }
+
+    fun saveCarPlayNightSchedule(context: Context, schedule: CarPlayNightSchedule) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putInt(KEY_CARPLAY_NIGHT_START, schedule.startMinute)
+            .putInt(KEY_CARPLAY_NIGHT_END, schedule.endMinute)
+            .apply()
     }
 
     fun loadFps(context: Context): Int = AirPlayDisplaySettings.sanitizeFps(
@@ -520,9 +611,86 @@ object AirPlayPersistence {
             .getInt(KEY_MEDIA_BUFFER_MS, com.shilapi.xcertplay.media.MediaAudioBuffer.DEFAULT_MILLIS),
     )
 
+    /** CarPlay's buffered music (Apple Music sends ahead over TCP); off by default, applies at reconnect. */
+    fun loadMainBufferedAudio(context: Context): Boolean =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(KEY_MAIN_BUFFERED_AUDIO, false)
+
+    fun saveMainBufferedAudio(context: Context, enabled: Boolean) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(KEY_MAIN_BUFFERED_AUDIO, enabled).apply()
+    }
+
+    /** Do not offer 8 and 16 kHz PCM for navigation prompts and alerts; applies at reconnect. */
+    fun loadSpeechWithout8And16Khz(context: Context): Boolean =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(KEY_SPEECH_WITHOUT_8_16_KHZ, false)
+
+    fun saveSpeechWithout8And16Khz(context: Context, enabled: Boolean) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(KEY_SPEECH_WITHOUT_8_16_KHZ, enabled).apply()
+    }
+
+    /** Offer no CarPlay audio, so the iPhone keeps audio on its Bluetooth link with the car; applies at reconnect. */
+    fun loadCarBluetoothAudio(context: Context): Boolean =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(KEY_CAR_BLUETOOTH_AUDIO, false)
+
+    fun saveCarBluetoothAudio(context: Context, enabled: Boolean) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(KEY_CAR_BLUETOOTH_AUDIO, enabled).apply()
+    }
+
+    fun loadSmoothVideo(context: Context): Boolean =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(KEY_SMOOTH_VIDEO, false)
+
+    fun saveSmoothVideo(context: Context, enabled: Boolean) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(KEY_SMOOTH_VIDEO, enabled).apply()
+    }
+
+    /** MediaTek's legacy low-latency/no-reorder decoder path; opt-in and applied at reconnect. */
+    fun loadMtkDecoderTuning(context: Context): Boolean =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(KEY_MTK_DECODER_TUNING, false)
+
+    fun saveMtkDecoderTuning(context: Context, enabled: Boolean) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putBoolean(KEY_MTK_DECODER_TUNING, enabled).apply()
+    }
+
+    fun loadDirectVideoOutput(context: Context): Boolean =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(KEY_DIRECT_VIDEO_OUTPUT, false)
+
+    fun saveDirectVideoOutput(context: Context, enabled: Boolean) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(KEY_DIRECT_VIDEO_OUTPUT, enabled).apply()
+    }
+
+    fun loadFpsCounter(context: Context): Boolean =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(KEY_FPS_COUNTER, false)
+
+    fun saveFpsCounter(context: Context, enabled: Boolean) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(KEY_FPS_COUNTER, enabled).apply()
+    }
+
+    fun loadLowLatencyDecoder(context: Context): Boolean =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(KEY_LOW_LATENCY_DECODER, false)
+
+    fun saveLowLatencyDecoder(context: Context, enabled: Boolean) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(KEY_LOW_LATENCY_DECODER, enabled).apply()
+    }
+
     fun saveMediaBufferMillis(context: Context, millis: Int) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
             .putInt(KEY_MEDIA_BUFFER_MS, com.shilapi.xcertplay.media.MediaAudioBuffer.sanitize(millis)).apply()
+    }
+
+    /** DiPlay's own experimental echo canceller on CarPlay call audio; opt-in, applies at reconnect. */
+    fun loadCallEchoCancellation(context: Context): Boolean =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(KEY_CALL_ECHO_CANCELLATION, false)
+
+    fun saveCallEchoCancellation(context: Context, enabled: Boolean) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(KEY_CALL_ECHO_CANCELLATION, enabled).apply()
+    }
+
+    /** Experimental bass cut on CarPlay call audio; opt-in, applies at reconnect. */
+    fun loadCallVoiceFilter(context: Context): Boolean =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(KEY_CALL_VOICE_FILTER, false)
+
+    fun saveCallVoiceFilter(context: Context, enabled: Boolean) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(KEY_CALL_VOICE_FILTER, enabled).apply()
     }
 
     fun saveFps(context: Context, fps: Int) {
@@ -581,6 +749,27 @@ object AirPlayPersistence {
     fun loadClusterMapEnabled(context: Context): Boolean =
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(KEY_CLUSTER_MAP, false)
 
+    fun loadAdbClusterEnabled(context: Context): Boolean = loadClusterMapEnabled(context) &&
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(KEY_ADB_CLUSTER_ACTIVITY, false)
+
+    fun saveAdbClusterEnabled(context: Context, enabled: Boolean) {
+        val edit = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putBoolean(KEY_ADB_CLUSTER_ACTIVITY, enabled)
+            .putBoolean("platform21_cluster_enabled", false)
+        if (enabled) edit.putBoolean(KEY_CLUSTER_MAP, true)
+        edit.apply()
+    }
+
+    fun loadLegacyClusterEnabled(context: Context): Boolean = loadClusterMapEnabled(context) &&
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean("platform21_cluster_enabled", false)
+
+    fun saveLegacyClusterEnabled(context: Context, enabled: Boolean) {
+        val edit = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putBoolean("platform21_cluster_enabled", enabled)
+        if (enabled) edit.putBoolean(KEY_CLUSTER_MAP, true).putBoolean(KEY_ADB_CLUSTER_ACTIVITY, false)
+        edit.apply()
+    }
+
     fun saveClusterMapEnabled(context: Context, enabled: Boolean) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(KEY_CLUSTER_MAP, enabled).apply()
     }
@@ -589,12 +778,73 @@ object AirPlayPersistence {
     fun loadCenterMapOverlay(context: Context): Boolean =
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(KEY_CENTER_MAP_OVERLAY, false)
 
+    /** Automatically hide the floating card when non-launcher apps are in the foreground. */
+    fun loadCenterMapAutoHide(context: Context): Boolean =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(KEY_CENTER_MAP_AUTO_HIDE, true)
+
+    fun saveCenterMapAutoHide(context: Context, enabled: Boolean) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(KEY_CENTER_MAP_AUTO_HIDE, enabled).apply()
+    }
+
     /** Other launchers may show the live dashboard map in their own screen (MapEmbedService). */
     fun loadLauncherMapSharing(context: Context): Boolean =
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(KEY_LAUNCHER_MAP_SHARING, false)
 
     fun saveLauncherMapSharing(context: Context, enabled: Boolean) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(KEY_LAUNCHER_MAP_SHARING, enabled).apply()
+    }
+
+    fun loadClusterSpeedometerEnabled(context: Context): Boolean =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean("cluster_speedometer_enabled", false)
+
+    fun saveClusterSpeedometerEnabled(context: Context, enabled: Boolean) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putBoolean("cluster_speedometer_enabled", enabled).apply()
+    }
+
+    internal fun observeClusterSpeedometer(context: Context, changed: () -> Unit): () -> Unit {
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        val listener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+            if (key?.startsWith("cluster_speedometer_") == true) changed()
+        }
+        prefs.registerOnSharedPreferenceChangeListener(listener)
+        return { prefs.unregisterOnSharedPreferenceChangeListener(listener) }
+    }
+
+    fun loadClusterSpeedometerX(context: Context): Int =
+        ClusterSpeedometerOverlay.snap(context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getInt("cluster_speedometer_x", ClusterSpeedometerOverlay.DEFAULT_X_PERCENT), ClusterSpeedometerOverlay.xPercents)
+
+    fun saveClusterSpeedometerX(context: Context, value: Int) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putInt("cluster_speedometer_x", ClusterSpeedometerOverlay.snap(value, ClusterSpeedometerOverlay.xPercents)).apply()
+    }
+
+    fun loadClusterSpeedometerY(context: Context): Int =
+        ClusterSpeedometerOverlay.snap(context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getInt("cluster_speedometer_y", ClusterSpeedometerOverlay.DEFAULT_Y_PERCENT), ClusterSpeedometerOverlay.yPercents)
+
+    fun saveClusterSpeedometerY(context: Context, value: Int) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putInt("cluster_speedometer_y", ClusterSpeedometerOverlay.snap(value, ClusterSpeedometerOverlay.yPercents)).apply()
+    }
+
+    fun loadClusterSpeedometerSize(context: Context): Int =
+        ClusterSpeedometerOverlay.snap(context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getInt("cluster_speedometer_size", ClusterSpeedometerOverlay.DEFAULT_SIZE_PERCENT), ClusterSpeedometerOverlay.sizePercents)
+
+    fun saveClusterSpeedometerSize(context: Context, value: Int) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putInt("cluster_speedometer_size", ClusterSpeedometerOverlay.snap(value, ClusterSpeedometerOverlay.sizePercents)).apply()
+    }
+
+    fun loadClusterSpeedometerOpacity(context: Context): Int =
+        ClusterSpeedometerOverlay.snap(context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getInt("cluster_speedometer_opacity", ClusterSpeedometerOverlay.DEFAULT_OPACITY_PERCENT), ClusterSpeedometerOverlay.opacityPercents)
+
+    fun saveClusterSpeedometerOpacity(context: Context, value: Int) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putInt("cluster_speedometer_opacity", ClusterSpeedometerOverlay.snap(value, ClusterSpeedometerOverlay.opacityPercents)).apply()
     }
 
     /** Observe consent changes for already attached launcher maps; call the returned function to unregister. */
@@ -622,20 +872,21 @@ object AirPlayPersistence {
     fun loadClusterContent(context: Context): CarPlayClusterDisplay.Content =
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(KEY_CLUSTER_CONTENT, null)
             ?.let { name -> CarPlayClusterDisplay.Content.entries.firstOrNull { it.name == name } }
-            ?: CarPlayClusterDisplay.Content.MAP
+            ?: if (AdbClusterRouter.enabled(context) && !loadLegacyClusterEnabled(context)) CarPlayClusterDisplay.Content.INSTRUMENTS else CarPlayClusterDisplay.Content.MAP
 
     fun saveClusterContent(context: Context, content: CarPlayClusterDisplay.Content) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putString(KEY_CLUSTER_CONTENT, content.name).apply()
+        overlaySettingsListener?.invoke()
     }
 
     /** Fingers for the swipe-down that opens settings; some head units reserve three. */
     fun loadSettingsGestureFingers(context: Context): Int =
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-            .getInt(KEY_SETTINGS_GESTURE_FINGERS, 3).coerceIn(2, 4)
+            .getInt(KEY_SETTINGS_GESTURE_FINGERS, 3).let { if (it == 0) 0 else it.coerceIn(2, 4) }
 
     fun saveSettingsGestureFingers(context: Context, fingers: Int) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
-            .putInt(KEY_SETTINGS_GESTURE_FINGERS, fingers.coerceIn(2, 4)).apply()
+            .putInt(KEY_SETTINGS_GESTURE_FINGERS, if (fingers == 0) 0 else fingers.coerceIn(2, 4)).apply()
     }
 
     fun loadCenterMapFollowsDashboard(context: Context): Boolean =
@@ -645,6 +896,257 @@ object AirPlayPersistence {
     fun saveCenterMapFollowsDashboard(context: Context, enabled: Boolean) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
             .putBoolean(KEY_CENTER_MAP_FOLLOWS_DASHBOARD, enabled).apply()
+    }
+
+    fun loadClusterTurnCardOverlaySizePercent(context: Context): Int {
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        if (prefs.contains(KEY_CLUSTER_TURN_CARD_OVERLAY_SIZE_PERCENT)) {
+            return ClusterTurnCardOverlay.snap(
+                prefs.getInt(KEY_CLUSTER_TURN_CARD_OVERLAY_SIZE_PERCENT, ClusterTurnCardOverlay.DEFAULT_SIZE_PERCENT),
+                ClusterTurnCardOverlay.sizePercents,
+            )
+        }
+        return when (prefs.getString(KEY_CLUSTER_TURN_CARD_OVERLAY_SIZE, null)) {
+            "SMALL" -> 40
+            "LARGE" -> 70
+            else -> ClusterTurnCardOverlay.DEFAULT_SIZE_PERCENT
+        }
+    }
+
+    fun saveClusterTurnCardOverlaySizePercent(context: Context, percent: Int) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putInt(
+                KEY_CLUSTER_TURN_CARD_OVERLAY_SIZE_PERCENT,
+                ClusterTurnCardOverlay.snap(percent, ClusterTurnCardOverlay.sizePercents),
+            ).apply()
+        overlaySettingsListener?.invoke()
+    }
+
+    fun loadClusterTurnCardOpacityPercent(context: Context): Int =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getInt(KEY_CLUSTER_TURN_CARD_OPACITY, ClusterTurnCardOverlay.DEFAULT_OPACITY_PERCENT)
+            .coerceIn(20, 100)
+
+    /**
+     * Full-screen marker on the same 1 % grid as the small-window one. The old 10 % steps migrate
+     * around the centre the sliders show (50 / 45), so an untouched marker reads as the default.
+     */
+    fun loadClusterMarkerXPercent(context: Context): Int {
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        if (prefs.contains(KEY_CLUSTER_MARKER_X_PERCENT)) {
+            return ClusterTurnCardOverlay.snap(prefs.getInt(KEY_CLUSTER_MARKER_X_PERCENT, 50), CarPlayClusterDisplay.markerXPercents)
+        }
+        val step = prefs.getInt(KEY_CLUSTER_MARKER_X, 0)
+        return ClusterTurnCardOverlay.snap(
+            50 + step * CarPlayClusterDisplay.MARKER_STEP_PERCENT,
+            CarPlayClusterDisplay.markerXPercents,
+        )
+    }
+
+    fun saveClusterMarkerXPercent(context: Context, percent: Int) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putInt(KEY_CLUSTER_MARKER_X_PERCENT,
+                ClusterTurnCardOverlay.snap(percent, CarPlayClusterDisplay.markerXPercents)).apply()
+    }
+
+    fun loadClusterMarkerYPercent(context: Context): Int {
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        if (prefs.contains(KEY_CLUSTER_MARKER_Y_PERCENT)) {
+            return ClusterTurnCardOverlay.snap(prefs.getInt(KEY_CLUSTER_MARKER_Y_PERCENT, 45), CarPlayClusterDisplay.markerYPercents)
+        }
+        val step = prefs.getInt(KEY_CLUSTER_MARKER_Y, 0)
+        return ClusterTurnCardOverlay.snap(
+            45 + step * CarPlayClusterDisplay.MARKER_STEP_PERCENT,
+            CarPlayClusterDisplay.markerYPercents,
+        )
+    }
+
+    fun saveClusterMarkerYPercent(context: Context, percent: Int) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putInt(KEY_CLUSTER_MARKER_Y_PERCENT,
+                ClusterTurnCardOverlay.snap(percent, CarPlayClusterDisplay.markerYPercents)).apply()
+    }
+
+    /**
+     * Right of centre by default: the small navi window sits on the right half of the panel.
+     * The old step values migrate onto the 1 % grid.
+     */
+    fun loadClusterSmallWindowMarkerXPercent(context: Context): Int {
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        if (prefs.contains(KEY_CLUSTER_SMALL_WINDOW_MARKER_X_PERCENT)) {
+            return ClusterTurnCardOverlay.snap(
+                prefs.getInt(KEY_CLUSTER_SMALL_WINDOW_MARKER_X_PERCENT, 80),
+                CarPlayClusterDisplay.markerXPercents,
+            )
+        }
+        val legacyStep = prefs.getInt(KEY_CLUSTER_SMALL_WINDOW_MARKER_X, 3)
+        val legacyPercent = (Math.round((49.5 + legacyStep * 10) / 5) * 5).toInt()
+        return ClusterTurnCardOverlay.snap(legacyPercent, CarPlayClusterDisplay.markerXPercents)
+    }
+
+    fun saveClusterSmallWindowMarkerXPercent(context: Context, percent: Int) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putInt(KEY_CLUSTER_SMALL_WINDOW_MARKER_X_PERCENT,
+                ClusterTurnCardOverlay.snap(percent, CarPlayClusterDisplay.markerXPercents)).apply()
+    }
+
+    fun loadClusterSmallWindowMarkerYPercent(context: Context): Int {
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        if (prefs.contains(KEY_CLUSTER_SMALL_WINDOW_MARKER_Y_PERCENT)) {
+            return ClusterTurnCardOverlay.snap(
+                prefs.getInt(KEY_CLUSTER_SMALL_WINDOW_MARKER_Y_PERCENT, 45),
+                CarPlayClusterDisplay.markerYPercents,
+            )
+        }
+        val legacyStep = prefs.getInt(KEY_CLUSTER_SMALL_WINDOW_MARKER_Y, 0)
+        val legacyPercent = (Math.round((45.5 + legacyStep * 10) / 5) * 5).toInt()
+        return ClusterTurnCardOverlay.snap(legacyPercent, CarPlayClusterDisplay.markerYPercents)
+    }
+
+    fun saveClusterSmallWindowMarkerYPercent(context: Context, percent: Int) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putInt(KEY_CLUSTER_SMALL_WINDOW_MARKER_Y_PERCENT,
+                ClusterTurnCardOverlay.snap(percent, CarPlayClusterDisplay.markerYPercents)).apply()
+    }
+
+
+    /** Small-window card theme: 0 follow the full-screen card theme, 1 always day, 2 always night. */
+    fun loadClusterSmallWindowCardTheme(context: Context): Int =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getInt(KEY_CLUSTER_SMALL_WINDOW_CARD_THEME, 0).coerceIn(0, 2)
+
+    fun saveClusterSmallWindowCardTheme(context: Context, theme: Int) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putInt(KEY_CLUSTER_SMALL_WINDOW_CARD_THEME, theme.coerceIn(0, 2)).apply()
+        overlaySettingsListener?.invoke()
+    }
+
+    /**
+     * The custom turn card keeps a second rect for the small window: x/y/size, panel percents. Its
+     * defaults sit right of centre and smaller, where the small navi window is. Until the driver sets
+     * the small-window card, a full-screen card value the driver chose still applies, as it did before.
+     */
+    fun loadClusterSmallWindowCardSizePercent(context: Context): Int {
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        val size = when {
+            prefs.contains(KEY_CLUSTER_SMALL_WINDOW_CARD_SIZE) -> prefs.getInt(KEY_CLUSTER_SMALL_WINDOW_CARD_SIZE, 40)
+            prefs.contains(KEY_CLUSTER_TURN_CARD_OVERLAY_SIZE_PERCENT) || prefs.contains(KEY_CLUSTER_TURN_CARD_OVERLAY_SIZE) ->
+                loadClusterTurnCardOverlaySizePercent(context)
+            else -> 40
+        }
+        return ClusterTurnCardOverlay.snap(size, ClusterTurnCardOverlay.sizePercents)
+    }
+
+    fun saveClusterSmallWindowCardSizePercent(context: Context, percent: Int) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putInt(KEY_CLUSTER_SMALL_WINDOW_CARD_SIZE, ClusterTurnCardOverlay.snap(percent, ClusterTurnCardOverlay.sizePercents)).apply()
+        overlaySettingsListener?.invoke()
+    }
+
+    fun loadClusterSmallWindowCardXPercent(context: Context): Int {
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        val x = when {
+            prefs.contains(KEY_CLUSTER_SMALL_WINDOW_CARD_X) -> prefs.getInt(KEY_CLUSTER_SMALL_WINDOW_CARD_X, 80)
+            prefs.contains(KEY_CLUSTER_TURN_CARD_OVERLAY_X) || prefs.contains(KEY_CLUSTER_TURN_CARD_OVERLAY_POSITION) ->
+                loadClusterTurnCardOverlayXPercent(context)
+            else -> 80
+        }
+        return ClusterTurnCardOverlay.snap(x, ClusterTurnCardOverlay.smallWindowXPercents)
+    }
+
+    fun saveClusterSmallWindowCardXPercent(context: Context, percent: Int) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putInt(KEY_CLUSTER_SMALL_WINDOW_CARD_X, ClusterTurnCardOverlay.snap(percent, ClusterTurnCardOverlay.smallWindowXPercents)).apply()
+        overlaySettingsListener?.invoke()
+    }
+
+    fun loadClusterSmallWindowCardYPercent(context: Context): Int {
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        val y = when {
+            prefs.contains(KEY_CLUSTER_SMALL_WINDOW_CARD_Y) -> prefs.getInt(KEY_CLUSTER_SMALL_WINDOW_CARD_Y, 25)
+            prefs.contains(KEY_CLUSTER_TURN_CARD_OVERLAY_Y) -> loadClusterTurnCardOverlayYPercent(context)
+            else -> 25
+        }
+        return ClusterTurnCardOverlay.snap(y, ClusterTurnCardOverlay.smallWindowYPercents)
+    }
+
+    fun saveClusterSmallWindowCardYPercent(context: Context, percent: Int) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putInt(KEY_CLUSTER_SMALL_WINDOW_CARD_Y, ClusterTurnCardOverlay.snap(percent, ClusterTurnCardOverlay.smallWindowYPercents)).apply()
+        overlaySettingsListener?.invoke()
+    }
+
+    /** The small-window card falls back to the shared opacity until it gets its own value. */
+    fun loadClusterSmallWindowCardOpacityPercent(context: Context): Int {
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        if (prefs.contains(KEY_CLUSTER_SMALL_WINDOW_CARD_OPACITY)) {
+            return prefs.getInt(KEY_CLUSTER_SMALL_WINDOW_CARD_OPACITY, 85).coerceIn(20, 100)
+        }
+        return loadClusterTurnCardOpacityPercent(context)
+    }
+
+    fun saveClusterSmallWindowCardOpacityPercent(context: Context, percent: Int) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putInt(KEY_CLUSTER_SMALL_WINDOW_CARD_OPACITY, percent.coerceIn(20, 100)).apply()
+        overlaySettingsListener?.invoke()
+    }
+
+    /** Turn-card glass theme: 0 follow the head unit, 1 always day, 2 always night. */
+    fun loadClusterTurnCardTheme(context: Context): Int =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getInt(KEY_CLUSTER_TURN_CARD_THEME, 0).coerceIn(0, 2)
+
+    fun saveClusterTurnCardTheme(context: Context, theme: Int) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putInt(KEY_CLUSTER_TURN_CARD_THEME, theme.coerceIn(0, 2)).apply()
+        overlaySettingsListener?.invoke()
+    }
+
+    fun saveClusterTurnCardOpacityPercent(context: Context, percent: Int) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putInt(KEY_CLUSTER_TURN_CARD_OPACITY, percent.coerceIn(20, 100)).apply()
+        overlaySettingsListener?.invoke()
+    }
+
+    fun loadClusterTurnCardOverlayXPercent(context: Context): Int {
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        val raw = if (prefs.contains(KEY_CLUSTER_TURN_CARD_OVERLAY_X)) {
+            prefs.getInt(KEY_CLUSTER_TURN_CARD_OVERLAY_X, ClusterTurnCardOverlay.DEFAULT_X_PERCENT)
+        } else when (prefs.getString(KEY_CLUSTER_TURN_CARD_OVERLAY_POSITION, null)) {
+            "LEFT" -> 20
+            "CENTER" -> 50
+            else -> ClusterTurnCardOverlay.DEFAULT_X_PERCENT
+        }
+        return ClusterTurnCardOverlay.snap(raw, ClusterTurnCardOverlay.xPercents)
+    }
+
+    fun saveClusterTurnCardOverlayXPercent(context: Context, percent: Int) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putInt(
+                KEY_CLUSTER_TURN_CARD_OVERLAY_X,
+                ClusterTurnCardOverlay.snap(percent, ClusterTurnCardOverlay.xPercents),
+            ).apply()
+        overlaySettingsListener?.invoke()
+    }
+
+    fun loadClusterTurnCardOverlayYPercent(context: Context): Int {
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        if (prefs.contains(KEY_CLUSTER_TURN_CARD_OVERLAY_Y)) {
+            return ClusterTurnCardOverlay.snap(
+                prefs.getInt(KEY_CLUSTER_TURN_CARD_OVERLAY_Y, ClusterTurnCardOverlay.DEFAULT_Y_PERCENT),
+                ClusterTurnCardOverlay.yPercents,
+            )
+        }
+        return ClusterTurnCardOverlay.DEFAULT_Y_PERCENT
+    }
+
+    fun saveClusterTurnCardOverlayYPercent(context: Context, percent: Int) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putInt(
+                KEY_CLUSTER_TURN_CARD_OVERLAY_Y,
+                ClusterTurnCardOverlay.snap(percent, ClusterTurnCardOverlay.yPercents),
+            ).apply()
+        overlaySettingsListener?.invoke()
     }
 
     fun loadClusterMapScalePercent(context: Context): Int = CarPlayClusterDisplay.STREAM_SCALE_PERCENT.let { default ->
@@ -673,6 +1175,51 @@ object AirPlayPersistence {
     fun saveClusterMarkerVerticalStep(context: Context, step: Int) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
             .putInt(KEY_CLUSTER_MARKER_Y, step.coerceIn(CarPlayClusterDisplay.verticalSteps)).apply()
+    }
+
+    /** 0 off, 1 always small-window positions, 2 auto from the cluster. Default off. */
+    fun loadClusterSmallWindowMode(context: Context): Int =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getInt(KEY_CLUSTER_SMALL_WINDOW_MODE, 0).coerceIn(0, 2)
+
+    fun saveClusterSmallWindowMode(context: Context, mode: Int) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putInt(KEY_CLUSTER_SMALL_WINDOW_MODE, mode.coerceIn(0, 2)).apply()
+    }
+
+    fun loadClusterSmallWindowMarkerHorizontalStep(context: Context): Int =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getInt(KEY_CLUSTER_SMALL_WINDOW_MARKER_X, 3)
+            .coerceIn(CarPlayClusterDisplay.horizontalSteps)
+
+    fun saveClusterSmallWindowMarkerHorizontalStep(context: Context, step: Int) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putInt(KEY_CLUSTER_SMALL_WINDOW_MARKER_X, step.coerceIn(CarPlayClusterDisplay.horizontalSteps)).apply()
+    }
+
+    fun loadClusterSmallWindowMarkerVerticalStep(context: Context): Int =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getInt(KEY_CLUSTER_SMALL_WINDOW_MARKER_Y, 0)
+            .coerceIn(CarPlayClusterDisplay.verticalSteps)
+
+    fun saveClusterSmallWindowMarkerVerticalStep(context: Context, step: Int) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putInt(KEY_CLUSTER_SMALL_WINDOW_MARKER_Y, step.coerceIn(CarPlayClusterDisplay.verticalSteps)).apply()
+    }
+
+    // Cluster mapping has its own key; never reuse the main display mapping at the same resolution.
+    fun loadClusterSafeAreaRect(context: Context): SafeAreaRect? =
+        SafeAreaCodec.decode(context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getString("cluster_safe_area_1920x720", null))?.clampTo(1920, 720)
+
+    fun saveClusterSafeAreaRect(context: Context, rect: SafeAreaRect) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putString("cluster_safe_area_1920x720", SafeAreaCodec.encode(rect.clampTo(1920, 720))).apply()
+    }
+
+    fun clearClusterSafeAreaRect(context: Context) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .remove("cluster_safe_area_1920x720").apply()
     }
 
     fun loadRightHandDrive(context: Context): Boolean =
@@ -705,6 +1252,16 @@ object AirPlayPersistence {
             .apply()
     }
 
+    fun loadHarmanFullscreen(context: Context): Boolean =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getBoolean(KEY_HARMAN_FULLSCREEN, false)
+
+    fun saveHarmanFullscreen(context: Context, enabled: Boolean) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putBoolean(KEY_HARMAN_FULLSCREEN, enabled)
+            .apply()
+    }
+
     fun loadSafeAreaDrawOutside(context: Context): Boolean =
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
             .getBoolean(KEY_SAFE_AREA_DRAW_OUTSIDE, true)
@@ -712,6 +1269,17 @@ object AirPlayPersistence {
     fun saveSafeAreaDrawOutside(context: Context, drawOutside: Boolean) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
             .putBoolean(KEY_SAFE_AREA_DRAW_OUTSIDE, drawOutside)
+            .apply()
+    }
+
+    /** Off by default: square full-screen video is for screens that show a gap or wallpaper corners (#578, #586). */
+    fun loadMainDisplayDisableSafeArea(context: Context): Boolean =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getBoolean(KEY_MAIN_DISPLAY_DISABLE_SAFE_AREA, false)
+
+    fun saveMainDisplayDisableSafeArea(context: Context, disable: Boolean) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putBoolean(KEY_MAIN_DISPLAY_DISABLE_SAFE_AREA, disable)
             .apply()
     }
 

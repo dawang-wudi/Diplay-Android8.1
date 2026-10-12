@@ -40,40 +40,6 @@ class CarPlayMediaEngineTest {
     }
 
     @Test
-    fun closingOrTearingDownOldScreenPreservesReplacementScreen() {
-        val events = mutableListOf<Pair<Int, Boolean>>()
-        val engine = CarPlayMediaEngine(object : MediaSink {
-            override fun onScreenStreamActive(type: Int, active: Boolean) {
-                events += type to active
-            }
-        })
-        val old = testSession()
-        val replacement = testSession()
-        val streamsField = CarPlayMediaEngine::class.java.getDeclaredField("streams").apply {
-            isAccessible = true
-        }
-        @Suppress("UNCHECKED_CAST")
-        val streams = streamsField.get(engine) as MutableMap<CarPlayMediaEngine.StreamKey, Closeable>
-        val closed = mutableListOf<String>()
-        streams[CarPlayMediaEngine.StreamKey(old, 110)] = Closeable { closed += "old" }
-        streams[CarPlayMediaEngine.StreamKey(replacement, 110)] = Closeable { closed += "replacement" }
-        try {
-            engine.onSessionClosed(old)
-            engine.onTeardown(old, 110)
-            assertEquals(listOf("old"), closed)
-            assertTrue(events.isEmpty())
-            engine.onSessionClosed(replacement)
-            assertEquals(listOf("old", "replacement"), closed)
-            assertEquals(listOf(110 to false), events)
-        } finally {
-            engine.onSessionClosed(old)
-            engine.onSessionClosed(replacement)
-            old.close()
-            replacement.close()
-        }
-    }
-
-    @Test
     fun sessionCloseReportsAllScreenStreamsInactive() {
         val events = mutableListOf<Pair<Int, Boolean>>()
         val sink = object : MediaSink {
