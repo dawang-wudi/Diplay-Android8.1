@@ -908,7 +908,9 @@
     <string name="settings_cluster_music_size">音楽カード · サイズ</string>
     <string name="settings_cluster_music_unknown">不明なアーティスト</string>
 
-    <!-- wudi81: automatic car hotspot on firmware without BYD's ADB path -->
+    <!-- wudi81: automatic car hotspot on firmware without BYD's ADB path, and the iPhone microphone option -->
+    <string name="use_iphone_microphone">iPhone のマイクを使う</string>
+    <string name="use_iphone_microphone_hint">このヘッドユニットにマイクがない場合にオンにします。DiPlay は iPhone にマイク入力を提供しないと伝えるため、通話と Siri は iPhone 自身のマイクを使うようになります。次回の接続から適用されます。</string>
     <string name="auto_car_hotspot_section">車のホットスポット · 自動起動</string>
     <string name="auto_car_hotspot_description_settings_grant">DiPlay を開いたときに保存済みの車のホットスポットを起動します。先に下の「システム設定の変更」を許可してください。ホットスポットの名前とパスワードは保持し、オフにすることはありません。</string>
     <string name="grant_modify_system_settings">「システム設定の変更」を許可</string>

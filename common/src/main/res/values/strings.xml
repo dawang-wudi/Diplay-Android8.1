@@ -909,7 +909,9 @@
     <string name="settings_cluster_music_size">Music card · size</string>
     <string name="settings_cluster_music_unknown">Unknown artist</string>
 
-    <!-- wudi81: automatic car hotspot on firmware without BYD's ADB path -->
+    <!-- wudi81: automatic car hotspot on firmware without BYD's ADB path, and the iPhone microphone option -->
+    <string name="use_iphone_microphone">Use the iPhone microphone</string>
+    <string name="use_iphone_microphone_hint">Turn this on when this head unit has no microphone. DiPlay tells the iPhone that it provides no microphone input, so calls and Siri should use the iPhone’s own microphone. Applies at the next connection.</string>
     <string name="auto_car_hotspot_section">Car hotspot · automatic start</string>
     <string name="auto_car_hotspot_description_settings_grant">Starts the saved car hotspot when DiPlay opens. Grant “Modify system settings” below first. Keeps the hotspot name and password and never turns it off.</string>
     <string name="grant_modify_system_settings">Grant “Modify system settings”</string>

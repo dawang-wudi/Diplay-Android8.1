@@ -820,7 +820,9 @@
     <string name="settings_cluster_music_size">Музика · розмір</string>
     <string name="settings_cluster_music_unknown">Невідомий виконавець</string>
 
-    <!-- wudi81: automatic car hotspot on firmware without BYD's ADB path -->
+    <!-- wudi81: automatic car hotspot on firmware without BYD's ADB path, and the iPhone microphone option -->
+    <string name="use_iphone_microphone">Використовувати мікрофон iPhone</string>
+    <string name="use_iphone_microphone_hint">Увімкніть, якщо в головному пристрої немає мікрофона. DiPlay повідомить iPhone, що мікрофон не надається, тож виклики та Siri мають використовувати мікрофон самого iPhone. Застосовується за наступного підключення.</string>
     <string name="auto_car_hotspot_section">Точка доступу автомобіля · автозапуск</string>
     <string name="auto_car_hotspot_description_settings_grant">Запускає збережену точку доступу автомобіля під час відкриття DiPlay. Спершу надайте «Зміна системних налаштувань» нижче. Зберігає назву й пароль точки доступу і ніколи її не вимикає.</string>
     <string name="grant_modify_system_settings">Надати «Зміна системних налаштувань»</string>

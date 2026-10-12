@@ -380,6 +380,7 @@ class CarPlayHostActivity : ComponentActivity() {
     private var hevcSoftwareDecoderEnabled = false
     private var advancedAudioChannelMappingSupported = false
     private var advancedAudioChannelMapping = false
+    private var useIphoneMicrophone = false
     private var navigationStreamType = 14
     private var debugLogsEnabled = false
     private var autoStartOnBoot = false
@@ -732,6 +733,7 @@ class CarPlayHostActivity : ComponentActivity() {
         advancedAudioChannelMapping =
             advancedAudioChannelMappingSupported &&
                 AirPlayPersistence.loadAdvancedAudioChannelMapping(this)
+        useIphoneMicrophone = AirPlayPersistence.loadUseIphoneMicrophone(this)
         navigationStreamType = AirPlayPersistence.loadNavigationStreamType(this)
         debugLogsEnabled = AirPlayPersistence.loadDebugLogsEnabled(this)
         autoStartOnBoot = AirPlayPersistence.loadAutoStartOnBoot(this)
@@ -984,6 +986,7 @@ class CarPlayHostActivity : ComponentActivity() {
         advancedAudioChannelMapping =
             advancedAudioChannelMappingSupported &&
                 AirPlayPersistence.loadAdvancedAudioChannelMapping(this)
+        useIphoneMicrophone = AirPlayPersistence.loadUseIphoneMicrophone(this)
         val followClusterUsage = DiLink51ClusterLayout.automatic(this) ||
             AirPlayPersistence.loadClusterSmallWindowMode(this) == CLUSTER_SMALL_WINDOW_AUTO
         if (followClusterUsage && clusterMonitor == null) {
@@ -2569,14 +2572,14 @@ class CarPlayHostActivity : ComponentActivity() {
             ).apply { topMargin = dp(12) },
         )
 
+        content.addView(
+            settingsCategoryHeader(getString(R.string.audio)),
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+            ).apply { topMargin = dp(36) },
+        )
         if (advancedAudioChannelMappingSupported) {
-            content.addView(
-                settingsCategoryHeader(getString(R.string.audio)),
-                LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT,
-                ).apply { topMargin = dp(36) },
-            )
             content.addView(
                 settingsSwitchRow(
                     label = getString(R.string.advanced_audio_channel_mapping),
@@ -2596,6 +2599,25 @@ class CarPlayHostActivity : ComponentActivity() {
                 ).apply { topMargin = dp(12) },
             )
         }
+        // A head unit with no microphone offers none, so the iPhone should use its own instead.
+        // /info is sent once per session, so this applies at the next connection.
+        content.addView(
+            settingsSwitchRow(
+                label = getString(R.string.use_iphone_microphone),
+                checked = useIphoneMicrophone,
+                description = getString(R.string.use_iphone_microphone_hint),
+            ) { checked ->
+                useIphoneMicrophone = checked
+                appendLog(
+                    "iPhone microphone ${if (checked) "enabled" else "disabled"}; " +
+                        "applies at the next connection",
+                )
+            },
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+            ).apply { topMargin = dp(12) },
+        )
 
         content.addView(
             settingsCategoryHeader(getString(R.string.settings_vehicle)),
@@ -2974,6 +2996,7 @@ class CarPlayHostActivity : ComponentActivity() {
         AirPlayPersistence.saveLocationReportingEnabled(this, locationReportingEnabled)
         AirPlayPersistence.saveAutoStartOnBoot(this, autoStartOnBoot)
         AirPlayPersistence.saveAdvancedAudioChannelMapping(this, advancedAudioChannelMapping)
+        AirPlayPersistence.saveUseIphoneMicrophone(this, useIphoneMicrophone)
         AirPlayPersistence.saveDisplayScaleTenths(this, displayScaleTenths)
         AirPlayPersistence.saveDisplayScalePercent(this, displayScalePercent)
         AirPlayPersistence.saveFps(this, fps)
@@ -4453,7 +4476,7 @@ class CarPlayHostActivity : ComponentActivity() {
             cluster = clusterDisplayConfig(),
             rightHandDrive = rightHandDrive,
             hevc = hevcEnabled,
-            microphone = microphoneAvailable,
+            microphone = microphoneAvailable && !useIphoneMicrophone,
             microphoneOpus = com.shilapi.xcertplay.media.OpusEncoderSupport.isAvailable(),
             manufacturer = normalizedManufacturer(),
             model = normalizedModel(),
@@ -4690,7 +4713,7 @@ class CarPlayHostActivity : ComponentActivity() {
     private fun createMediaEngine(sink: AndroidMediaSink): CarPlayMediaEngine =
         CarPlayMediaEngine(
             sink = sink,
-            microphoneEnabled = microphoneAvailable,
+            microphoneEnabled = microphoneAvailable && !useIphoneMicrophone,
             audioCaptureDirectory = audioCaptureDirectory(),
         )
 

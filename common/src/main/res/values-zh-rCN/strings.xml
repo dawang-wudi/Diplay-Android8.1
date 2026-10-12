@@ -868,7 +868,9 @@
     <string name="settings_cluster_music_size">音乐卡片 · 大小</string>
     <string name="settings_cluster_music_unknown">未知艺人</string>
 
-    <!-- wudi81: automatic car hotspot on firmware without BYD's ADB path -->
+    <!-- wudi81: automatic car hotspot on firmware without BYD's ADB path, and the iPhone microphone option -->
+    <string name="use_iphone_microphone">使用 iPhone 的麦克风</string>
+    <string name="use_iphone_microphone_hint">车机没有麦克风时打开。DiPlay 会告知 iPhone 本车机不提供麦克风输入，通话和 Siri 应改用 iPhone 自己的麦克风。下次连接生效。</string>
     <string name="auto_car_hotspot_section">车机热点 · 自动开启</string>
     <string name="auto_car_hotspot_description_settings_grant">打开 DiPlay 时启动已保存的车机热点。请先在下方授予“修改系统设置”。保留热点名称和密码，不会关闭热点。</string>
     <string name="grant_modify_system_settings">授予“修改系统设置”</string>

@@ -2014,6 +2014,11 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
                 bufferPresets.indexOf(AirPlayPersistence.loadMediaBufferMillis(this)).coerceAtLeast(0)) {
                 AirPlayPersistence.saveMediaBufferMillis(this, bufferPresets[it])
             }
+            // A head unit with no microphone offers none, so the iPhone should use its own instead.
+            toggle(card, getString(R.string.use_iphone_microphone), getString(R.string.use_iphone_microphone_hint),
+                AirPlayPersistence.loadUseIphoneMicrophone(this)) { enabled ->
+                AirPlayPersistence.saveUseIphoneMicrophone(this, enabled)
+            }
         }
         filteredSection(content, SettingsSection.NAVIGATION_WHEEL,
             getString(R.string.settings_navigation_wheel_volume), R.drawable.ic_dp_audio) { card ->
