@@ -907,4 +907,11 @@
     <string name="settings_cluster_music_vertical">音楽カード · 上下位置</string>
     <string name="settings_cluster_music_size">音楽カード · サイズ</string>
     <string name="settings_cluster_music_unknown">不明なアーティスト</string>
+
+    <!-- wudi81: automatic car hotspot on firmware without BYD's ADB path -->
+    <string name="auto_car_hotspot_section">車のホットスポット · 自動起動</string>
+    <string name="auto_car_hotspot_description_settings_grant">DiPlay を開いたときに保存済みの車のホットスポットを起動します。先に下の「システム設定の変更」を許可してください。ホットスポットの名前とパスワードは保持し、オフにすることはありません。</string>
+    <string name="grant_modify_system_settings">「システム設定の変更」を許可</string>
+    <string name="car_hotspot_needs_modify_system_settings">「システム設定の変更」がまだ許可されていません。許可すると DiPlay がホットスポットをオンにできます。</string>
+    <string name="write_settings_page_missing">このヘッドユニットには「システム設定の変更」ページがありません。</string>
 </resources>

@@ -819,4 +819,11 @@
     <string name="settings_cluster_music_vertical">Музика · вертикальне положення</string>
     <string name="settings_cluster_music_size">Музика · розмір</string>
     <string name="settings_cluster_music_unknown">Невідомий виконавець</string>
+
+    <!-- wudi81: automatic car hotspot on firmware without BYD's ADB path -->
+    <string name="auto_car_hotspot_section">Точка доступу автомобіля · автозапуск</string>
+    <string name="auto_car_hotspot_description_settings_grant">Запускає збережену точку доступу автомобіля під час відкриття DiPlay. Спершу надайте «Зміна системних налаштувань» нижче. Зберігає назву й пароль точки доступу і ніколи її не вимикає.</string>
+    <string name="grant_modify_system_settings">Надати «Зміна системних налаштувань»</string>
+    <string name="car_hotspot_needs_modify_system_settings">«Зміна системних налаштувань» ще не надано. Надайте її, щоб DiPlay міг увімкнути точку доступу.</string>
+    <string name="write_settings_page_missing">У цьому головному пристрої немає сторінки «Зміна системних налаштувань».</string>
 </resources>

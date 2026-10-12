@@ -867,4 +867,11 @@
     <string name="settings_cluster_music_vertical">音乐卡片 · 垂直位置</string>
     <string name="settings_cluster_music_size">音乐卡片 · 大小</string>
     <string name="settings_cluster_music_unknown">未知艺人</string>
+
+    <!-- wudi81: automatic car hotspot on firmware without BYD's ADB path -->
+    <string name="auto_car_hotspot_section">车机热点 · 自动开启</string>
+    <string name="auto_car_hotspot_description_settings_grant">打开 DiPlay 时启动已保存的车机热点。请先在下方授予“修改系统设置”。保留热点名称和密码，不会关闭热点。</string>
+    <string name="grant_modify_system_settings">授予“修改系统设置”</string>
+    <string name="car_hotspot_needs_modify_system_settings">尚未授予“修改系统设置”。授予后 DiPlay 才能开启热点。</string>
+    <string name="write_settings_page_missing">本车机没有“修改系统设置”页面。</string>
 </resources>

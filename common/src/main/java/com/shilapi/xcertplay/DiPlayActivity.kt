@@ -176,6 +176,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
     private var clusterSafeAreaDialog: Dialog? = null
     private var clusterContentRequestVersion = 0L
     private var pendingCarHotspotSetup = false
+    private var pendingCarHotspotEnable = false
     private var hotspotJoinControls: HotspotJoinControls? = null
     private var setupError: String? = null
     private var status: TextView? = null
@@ -502,6 +503,17 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
             return
         }
         handler.removeCallbacks(tick); handler.post(tick)
+        // Back from the system page that holds "Modify system settings": arm the car hotspot only
+        // once the app-op is really held, so a connection never fails on a missing permission.
+        if (pendingCarHotspotEnable) {
+            pendingCarHotspotEnable = false
+            if (Settings.System.canWrite(this)) {
+                CarHotspotSettings.setEnabled(this, true)
+                toast(getString(R.string.hotspot_permission_granted))
+            } else {
+                toast(getString(R.string.car_hotspot_needs_modify_system_settings))
+            }
+        }
         // Back from the car settings: refresh the car hotspot reminder on the home page.
         if (!initialLaunch && !adbSwitchChangePending && !pausedForAdbSwitchChange &&
             (page == "home" || page == "settings" || page == "connection" || page == "setup")) render()
@@ -2655,22 +2667,27 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
 
     private fun bydAdbSettings(parent: LinearLayout) {
         if (AirPlayPersistence.loadWirelessHotspotMode(this) != WirelessHotspotMode.MANUAL) return
-        if (!CarHotspotSetup.isBydHeadUnit(this)) {
-            Log.i("DiPlay-Hotspot", "settings hidden: BYD head unit not detected")
-            return
-        }
+        // BYD firmware grants the app-op over its own ADB; every other firmware grants it from the
+        // system page that holds "Modify system settings", so no probe is needed there.
+        val byd = CarHotspotSetup.isBydHeadUnit(this)
         if (searchIndexSink != null) {
             // Index discoverable names without starting the asynchronous permission probe.
             searchIndexSink?.addAll(listOf(
                 getString(R.string.byd_adb_features),
                 getString(R.string.auto_car_hotspot_title),
                 getString(R.string.btn_auto_apply_permissions),
+                getString(R.string.grant_modify_system_settings),
             ))
             return
         }
         val controls = column().apply { visibility = View.GONE }
         bydAdbControls = controls
         parent.addView(controls)
+        if (!byd) {
+            controls.visibility = View.VISIBLE
+            renderBydAdbControls(controls, LocalAdb.Access.UNREACHABLE, false)
+            return
+        }
         Thread({
             val access = runCatching { CarHotspotSetup.check(applicationContext) }
                 .onFailure { Log.w("DiPlay-Hotspot", "settings ADB check failed", it) }
@@ -2680,26 +2697,31 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
                 if (bydAdbControls !== controls || isFinishing || isDestroyed) return@runOnUiThread
                 if (CarHotspotSettings.visible(true, access)) {
                     controls.visibility = View.VISIBLE
-                    renderBydAdbControls(controls, access)
+                    renderBydAdbControls(controls, access, true)
                 }
             }
         }, "diplay-hotspot-adb-check").start()
     }
 
-    private fun renderBydAdbControls(controls: LinearLayout, access: LocalAdb.Access) {
+    private fun renderBydAdbControls(controls: LinearLayout, access: LocalAdb.Access, byd: Boolean) {
         controls.removeAllViews()
         adbSwitches.keys.retainAll(setOf(R.string.open_after_the_car_starts))
         adbStatus = null
-        controls.visibility = if (CarHotspotSettings.visible(true, access)) View.VISIBLE else View.GONE
+        val visible = if (byd) CarHotspotSettings.visible(true, access) else true
+        controls.visibility = if (visible) View.VISIBLE else View.GONE
         if (controls.visibility == View.GONE) return
         if (AirPlayPersistence.loadWirelessHotspotMode(this) != WirelessHotspotMode.MANUAL) {
             controls.visibility = View.GONE
             return
         }
-        section(controls, getString(R.string.byd_adb_features), R.drawable.ic_dp_permissions) { card ->
+        section(controls, getString(if (byd) R.string.byd_adb_features else R.string.auto_car_hotspot_section),
+            R.drawable.ic_dp_permissions) { card ->
             if (AirPlayPersistence.loadWirelessHotspotMode(this) == WirelessHotspotMode.MANUAL) {
-                adbToggle(card, R.string.auto_car_hotspot_title, R.string.auto_car_hotspot_description,
+                adbToggle(card, R.string.auto_car_hotspot_title,
+                    if (byd) R.string.auto_car_hotspot_description
+                    else R.string.auto_car_hotspot_description_settings_grant,
                     read = { CarHotspotSettings.enabled(this) },
+                    needsAdb = { byd },
                     permissions = {
                         buildList {
                             add(CarHotspotSetup.Permission.HOTSPOT)
@@ -2707,21 +2729,48 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
                                 add(CarHotspotSetup.Permission.BOOT_LAUNCH)
                             }
                         }
-                    }) {
-                    CarHotspotSettings.setEnabled(this, it)
-                    if (!it) startupHotspotCancelled = true
+                    }) { enabled ->
+                    // Never arm the hotspot without the app-op: the connection would fail on it
+                    // instead of falling back to waiting for the car's own hotspot.
+                    if (!byd && enabled && !Settings.System.canWrite(this)) {
+                        pendingCarHotspotEnable = true
+                        openWriteSettingsPermission()
+                    } else {
+                        CarHotspotSettings.setEnabled(this, enabled)
+                        if (!enabled) startupHotspotCancelled = true
+                    }
                 }
             }
-            adbStatus = label(getString(if (access == LocalAdb.Access.READY)
-                R.string.adb_access_ready else R.string.adb_not_approved), 14, MUTED).also(card::addView)
-            val allReady = UsbPermissionSetup.snapshot(this).values.all { it }
-            if (!allReady) {
-                card.addView(button(getString(R.string.btn_auto_apply_permissions), false) { autoApplyPermissions() }, matchButton(8, 54))
+            if (byd) {
+                adbStatus = label(getString(if (access == LocalAdb.Access.READY)
+                    R.string.adb_access_ready else R.string.adb_not_approved), 14, MUTED).also(card::addView)
+                val allReady = UsbPermissionSetup.snapshot(this).values.all { it }
+                if (!allReady) {
+                    card.addView(button(getString(R.string.btn_auto_apply_permissions), false) { autoApplyPermissions() }, matchButton(8, 54))
+                } else {
+                    card.addView(label(getString(R.string.btn_permissions_ready), 14, READY).apply {
+                        setPadding(0, dp(6), 0, dp(4))
+                    })
+                }
             } else {
-                card.addView(label(getString(R.string.btn_permissions_ready), 14, READY).apply {
-                    setPadding(0, dp(6), 0, dp(4))
-                })
+                val granted = Settings.System.canWrite(this)
+                card.addView(label(getString(if (granted) R.string.hotspot_permission_granted
+                    else R.string.car_hotspot_needs_modify_system_settings), 14,
+                    if (granted) READY else WARNING).apply { setPadding(0, dp(6), 0, dp(4)) })
+                if (!granted) {
+                    card.addView(button(getString(R.string.grant_modify_system_settings), false) {
+                        pendingCarHotspotEnable = true
+                        openWriteSettingsPermission()
+                    }, matchButton(8, 54))
+                }
             }
+        }
+    }
+
+    private fun openWriteSettingsPermission() {
+        if (runCatching { startActivity(CarHotspotSetup.writeSettingsIntent(this)) }.isFailure) {
+            pendingCarHotspotEnable = false
+            toast(getString(R.string.write_settings_page_missing))
         }
     }
 

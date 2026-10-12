@@ -4,6 +4,13 @@ import java.io.IOException
 
 object WirelessStartupPolicy {
     const val HOTSPOT_READY_MILLIS = 15_000L
+
+    /**
+     * How long to wait for the car's own access point once the hotspot is being started or is
+     * already on. Kept separate from [HOTSPOT_READY_MILLIS] so a slow firmware's access point is
+     * not cut off, while a hotspot request that is never going to be answered still fails quickly.
+     */
+    const val MANUAL_HOTSPOT_WAIT_MILLIS = 60_000L
     const val INTERFACE_POLL_MILLIS = 250L
     const val STABLE_SAMPLES = 3
     const val FIRST_TCP_MILLIS = 30_000L

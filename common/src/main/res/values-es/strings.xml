@@ -807,4 +807,11 @@
     <string name="settings_cluster_music_vertical">Tarjeta musical · posición vertical</string>
     <string name="settings_cluster_music_size">Tarjeta musical · tamaño</string>
     <string name="settings_cluster_music_unknown">Artista desconocido</string>
+
+    <!-- wudi81: automatic car hotspot on firmware without BYD's ADB path -->
+    <string name="auto_car_hotspot_section">Punto de acceso del coche · inicio automático</string>
+    <string name="auto_car_hotspot_description_settings_grant">Inicia el punto de acceso guardado del coche al abrir DiPlay. Concede antes «Modificar ajustes del sistema» abajo. Conserva el nombre y la contraseña del punto de acceso y nunca lo apaga.</string>
+    <string name="grant_modify_system_settings">Conceder «Modificar ajustes del sistema»</string>
+    <string name="car_hotspot_needs_modify_system_settings">«Modificar ajustes del sistema» aún no está concedido. Concédelo para que DiPlay pueda encender el punto de acceso.</string>
+    <string name="write_settings_page_missing">Esta pantalla de coche no tiene una página para «Modificar ajustes del sistema».</string>
 </resources>

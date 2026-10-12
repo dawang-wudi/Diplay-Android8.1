@@ -908,4 +908,11 @@
     <string name="settings_cluster_music_vertical">Music card · vertical position</string>
     <string name="settings_cluster_music_size">Music card · size</string>
     <string name="settings_cluster_music_unknown">Unknown artist</string>
+
+    <!-- wudi81: automatic car hotspot on firmware without BYD's ADB path -->
+    <string name="auto_car_hotspot_section">Car hotspot · automatic start</string>
+    <string name="auto_car_hotspot_description_settings_grant">Starts the saved car hotspot when DiPlay opens. Grant “Modify system settings” below first. Keeps the hotspot name and password and never turns it off.</string>
+    <string name="grant_modify_system_settings">Grant “Modify system settings”</string>
+    <string name="car_hotspot_needs_modify_system_settings">“Modify system settings” is not granted yet. Grant it to let DiPlay turn the hotspot on.</string>
+    <string name="write_settings_page_missing">This head unit has no page for “Modify system settings”.</string>
 </resources>

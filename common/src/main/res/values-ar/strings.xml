@@ -856,4 +856,11 @@
     <string name="wireless_startup_retries_exhausted">توقفت المحاولات التلقائية. تحقّق من الاتصال وأعد المحاولة يدويًا.</string>
     <string name="retry_carplay_connection">إعادة محاولة الاتصال</string>
     <string name="auto_grant_incomplete">لم يتحقق الإعداد من جميع الأذونات المطلوبة. راجع حالة كل إذن أدناه؛ وفعّل ADB عبر الشبكة ثم أعد المحاولة، أو استخدم الإعداد اليدوي. تُحفظ الأذونات الحالية.</string>
+
+    <!-- wudi81: automatic car hotspot on firmware without BYD's ADB path -->
+    <string name="auto_car_hotspot_section">نقطة اتصال السيارة · تشغيل تلقائي</string>
+    <string name="auto_car_hotspot_description_settings_grant">يشغّل نقطة اتصال السيارة المحفوظة عند فتح DiPlay. امنح «تعديل إعدادات النظام» أدناه أولاً. يحتفظ باسم نقطة الاتصال وكلمة المرور ولا يغلقها أبداً.</string>
+    <string name="grant_modify_system_settings">منح «تعديل إعدادات النظام»</string>
+    <string name="car_hotspot_needs_modify_system_settings">لم يُمنح «تعديل إعدادات النظام» بعد. امنحه ليتمكّن DiPlay من تشغيل نقطة الاتصال.</string>
+    <string name="write_settings_page_missing">لا تحتوي شاشة السيارة هذه على صفحة «تعديل إعدادات النظام».</string>
 </resources>

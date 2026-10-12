@@ -2276,7 +2276,13 @@ class CarPlayController(
         val timeoutMillis = if (hotspotMode == WirelessHotspotMode.WIFI_P2P) {
             WIFI_P2P_START_TIMEOUT_MILLIS
         } else if (hotspotMode == WirelessHotspotMode.MANUAL) {
-            ((readyDeadline - System.nanoTime()) / 1_000_000).coerceAtLeast(1)
+            // A slow firmware's access point still gets its own budget: starting it consumed part
+            // of the hotspot deadline above, and that deadline is far too short to wait for the
+            // car's own access point to appear.
+            maxOf(
+                (readyDeadline - System.nanoTime()) / 1_000_000,
+                WirelessStartupPolicy.MANUAL_HOTSPOT_WAIT_MILLIS,
+            )
         } else {
             HOTSPOT_START_TIMEOUT_MILLIS
         }
