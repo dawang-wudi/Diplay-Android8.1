@@ -1,9 +1,7 @@
 package com.shilapi.xcertplay
 
 import android.content.Context
-import android.content.Intent
 import android.content.pm.ApplicationInfo
-import android.net.Uri
 import android.provider.Settings
 import android.util.Log
 import com.shilapi.xcertplay.adb.AdbKeys
@@ -27,18 +25,6 @@ internal object CarHotspotSetup {
             BOOT_LAUNCH -> Settings.canDrawOverlays(context)
         }
     }
-
-    /**
-     * Firmware without BYD's ADB path grants WRITE_SETTINGS from the system settings page instead.
-     * The hotspot itself is started the same way either way: [CarHotspotTethering] gates on
-     * `Settings.System.canWrite`, which is the same app-op that page controls, so only the grant
-     * path differs.
-     */
-    fun usesSystemSettingsGrant(context: Context): Boolean = !isBydHeadUnit(context)
-
-    /** The system page that holds "Modify system settings" for this app. */
-    fun writeSettingsIntent(context: Context): Intent =
-        Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS, Uri.parse("package:${context.packageName}"))
 
     fun check(context: Context, adb: LocalAdb = LocalAdb(AdbKeys.load(context))): LocalAdb.Access = adb.use {
         it.connect(mayAsk = false)

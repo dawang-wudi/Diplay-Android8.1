@@ -17,8 +17,8 @@ android {
         applicationId = "com.shihab.diplay"
         minSdk = 25
         targetSdk = 37
-        versionCode = 47
-        versionName = "0.2.18"
+        versionCode = 48
+        versionName = "0.2.20"
 
     }
 
@@ -40,7 +40,7 @@ android {
     buildTypes {
         debug {
             applicationIdSuffix = ".wudi81v18"
-            versionNameSuffix = "-wudi81-v18-hotspot-mic"
+            versionNameSuffix = "-wudi81-v20-hotspot-mic"
         }
         release {
             optimization {
