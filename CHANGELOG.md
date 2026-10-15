@@ -1,23 +1,44 @@
-# wudi81 v18 — 2026-10-12
+# wudi81 v20 — 2026-10-15
 
-以上游 `main`（0.2.18 + 未发布的音频修复）为基线重建，并加入两项上游没有的功能。
+以上游 `main`（0.2.20）为基线重建，只保留本分支自有的两项改动，其余与上游一致。
 
-- **自动开启车机热点**：上游的实现被限定为比亚迪车机 + 本地 ADB 授权，本版放开到任意固件——
-  非比亚迪固件走系统设置页手动授予 `WRITE_SETTINGS`。开热点本身的实现仍用上游那套。
-  另外把「等车机自己的热点」的预算从与开热点共用的 15 秒拆出来，单独给 60 秒，
-  避免慢固件被开热点那步挤掉。
 - **使用 iPhone 的麦克风**（实验性，默认关闭）：让 DiPlay 在 AirPlay `/info` 里省略
   `audioInputFormats`，把麦克风输入交还给 iPhone。车机没有麦克风时用。
-  **iOS 是否真的回退到手机麦克风尚未验证。**
-- 包名 `com.shihab.diplay.wudi81v18`（versionCode 47），与上游 `com.shihab.diplay` 可共存。
-- README 改为中文，移除英文版与重复的中文副本。
+  开关在 设置 → 音频 → 音频路由。**iOS 是否真的回退到手机麦克风尚未验证。**
+  （上游没有这个功能，是本分支独有的。）
+- **车机热点等待预算 60 秒**：上游「等车机自己热点」与「开热点请求」共用 15 秒
+  （`HOTSPOT_READY_MILLIS`）。本版新增 `MANUAL_HOTSPOT_WAIT_MILLIS = 60_000L`，
+  在 MANUAL 模式下取两者较大值，避免慢固件的 AP 被挤掉；开热点请求本身仍限 15 秒，
+  失败能快速反馈。开热点本身的实现完全用上游那套。
+- 包名保持 `com.shihab.diplay.wudi81v18`（versionCode 48），可与车机上现有版本共存。
 
-基线取 `main` 而不是 `v0.2.18` 标签，是因为 0.2.18 引入了 issue #649：解码器输入等待放宽到
-0.5 秒后，慢解码器会越落越远，屏幕在后台时音乐每几秒欠载一次。修复提交 `7d974f42`
-把上限设为 100 毫秒，尚未发布。
+说明：上游 0.2.19/0.2.20 已自行实现了「非比亚迪固件走系统设置手动授权开热点」
+（#748、#775、#777，见 `systemHotspotSettings()` 与 `PlatformTetheringStart`），
+覆盖 Android 8.0–10（含本分支的 API 27 车机），并额外提供 shell 兜底与热点误报关闭的处理。
+因此本版**不再携带自己的 `CarHotspotEnabler`**，热点功能以上游实现为准，
+只保留上面那条 60 秒等待预算。
 
-实车验证（`alps F9212A` / MT8227L，Android 8.1 / API 27，iPhone 14 Pro）：无线 CarPlay 与
-自动开启车机热点均已确认可用。详见 [README](README.md)。
+# DiPlay 0.2.20 — 2026-10-15
+
+- Keep music playing when a head unit's audio clock drifts by adjusting its playback rate, run DiPlay's audio threads at audio priority, and keep separate music buffers for wireless and USB (#788, #740, #746).
+- Play calls that a head unit sends to its earpiece on the loudspeaker, add Calls on the loudspeaker for phone and tablet head units, open the microphone for app voice messages, open Siri once per press of BYD's voice key, and record calls in the car's phone audio state from the voice-recognition source (#797, #704, #698, #774, #786, #770).
+- Start wired CarPlay when a USB audio driver holds the iPhone, within seconds after Save and reconnect, after a VERSION reply that follows a reply trailer, and on Android 17 (#699, #714, #744, #708).
+- Turn the car hotspot on through the system shell, or without ADB on head units that aren't BYD on Android 8.0–10; let Connect in the "Car hotspot is off" dialog connect; add a switch for the Wi-Fi Direct scan pause; and skip 5 GHz Wi-Fi Direct channels on head units without that band (#699, #748, #775, #777, #789, #768, #740).
+- Find the dashboard cluster on controller 13 and 17 firmware and the Leopard 5 Ultra, hide the DiLink 4 cluster routes on DiLink 3, fall back from HEVC to H.264 without a hardware decoder, show CarPlay with FFmpeg-backed decoders, and group the settings menu inside CarPlay by goal (#714, #734, #707, #710).
+- Record DiPlay's last crash, the wheel and media keys it received, the car Bluetooth pause, app-call vocoder info, music rebuffers and the USB devices listed while waiting for a CH341 adapter in the diagnostic report (#700, #702, #788, #740, #759, #793).
+
+See [0.2.20 release notes](docs/RELEASE-NOTES-0.2.20.md) for contribution links and limits, and [validation](docs/VALIDATION.md) for checks. Full-release vehicle acceptance is not claimed.
+
+# DiPlay 0.2.19 — 2026-10-12
+
+- Start wired CarPlay several seconds sooner by not waiting 2 s on each refused USB network write, ask for CarPlay mode first on iOS 26, grant USB access through approved ADB on Android 7.1–9 head units without a USB permission page, and let Auto-confirm USB permission find the system dialog (#644, #689).
+- Report the playback position of 16 kHz calls, Siri and navigation prompts at their own rate instead of three times too fast, restart a microphone whose first read fails, and stop background music underruns from a 0.5 s audio wait (#644).
+- Keep CarPlay from restarting at the first touch with the DiLink 4 dashboard map on and from staying scaled down after the reversing camera, show the last picture when a SurfaceView output comes back, and redesign the in-CarPlay settings menu (#663, #674, #669, #642).
+- Japanese, complete Traditional Chinese with guides, and 67 more Arabic strings (#646, #691, #682, #681, #631).
+- Download the diagnostic report on a phone by QR code or a typed address and code, keep the phone page answering behind idle connections, show connection recovery tips and a Bluetooth-off message, and fix wireless CarPlay on MIUI 13 (#686, #687, #685, #677, #679, #673).
+- Set BYD navigation audio defaults on a first setup, add an optional album-artwork card on the dashboard map, record why the car hotspot could not be started, and fall back to the default Bluetooth adapter (#656, #660, #667, #641).
+
+See [0.2.19 release notes](docs/RELEASE-NOTES-0.2.19.md) for contribution links and limits, and [validation](docs/VALIDATION.md) for checks. Full-release vehicle acceptance is not claimed.
 
 # DiPlay 0.2.18 — 2026-10-11
 
