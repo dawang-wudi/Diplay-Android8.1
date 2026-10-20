@@ -2086,6 +2086,14 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
             })
             musicBufferChoice(card, wireless = true)
             musicBufferChoice(card, wireless = false)
+            // A head unit with no microphone offers none, so the iPhone should use its own instead.
+            // The /info response carries this, and it is sent once per session.
+            toggle(card, getString(R.string.settings_use_iphone_microphone),
+                getString(R.string.settings_use_iphone_microphone_description),
+                AirPlayPersistence.loadUseIphoneMicrophone(this)) { enabled ->
+                AirPlayPersistence.saveUseIphoneMicrophone(this, enabled)
+                markReconnectNeeded()
+            }
             toggle(card, getString(R.string.settings_call_speakerphone), getString(R.string.settings_call_speakerphone_description),
                 AirPlayPersistence.loadCallSpeakerphone(this)) { AirPlayPersistence.saveCallSpeakerphone(this, it) }
         }

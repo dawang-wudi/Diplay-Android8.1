@@ -891,6 +891,8 @@
     <string name="settings_mfi_target_description">Обирайте USB/CH341, лише коли до головного пристрою підключено адаптер автентифікації CH341. Без нього оберіть «Локально, без мережі». Застосовується під час наступного підключення.</string>
     <string name="settings_call_speakerphone">Дзвінки через гучномовець</string>
     <string name="settings_call_speakerphone_description">Для телефона або планшета Android, який використовується як головний пристрій: дзвінки CarPlay звучать із гучномовця, а не з розмовного динаміка, і використовується мікрофон гучного зв’язку. На головному пристрої автомобіля залиште вимкненим. Застосовується з наступного дзвінка.</string>
+        <string name="settings_use_iphone_microphone">Використовувати мікрофон iPhone</string>
+    <string name="settings_use_iphone_microphone_description">Увімкніть, якщо в головному пристрої немає мікрофона. DiPlay повідомляє iPhone, що не надає мікрофонного входу, тому дзвінки та Siri мають використовувати мікрофон самого iPhone. Застосовується за наступного підключення.</string>
     <string name="settings_navigation_attenuation">Гучність навігаційних підказок</string>
     <string name="settings_navigation_attenuation_value">%1$d дБ</string>
     <string name="settings_navigation_attenuation_description">Зменшує лише гучність навігаційних підказок CarPlay, не змінюючи музику та виклики. Застосовується одразу; регулювання навігації на пристрої лишається доступним.</string>

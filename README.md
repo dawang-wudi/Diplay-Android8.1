@@ -1,67 +1,290 @@
-# DiPlay
+# DiPlay · wudi81 分支
 
-[English](README.md) · [简体中文](README.zh-CN.md) · [繁體中文](README.zh-TW.md)
+**给安卓车机用的无线／有线 CarPlay 接收端。** 本仓库是
+[shihabal3amri/DiPlay](https://github.com/shihabal3amri/DiPlay) 的二次开发分支，
+基线是上游 **0.2.21**（`main` 分支），只在上游之上保留一项自己的功能：
 
-**CarPlay for compatible BYD Android head units.** Wired and wireless, with the familiar DiAuto interface. Independent app: `com.shihab.diplay`.
+**使用 iPhone 的麦克风** —— 车机没有麦克风时，让通话和 Siri 改用手机自己的麦克风。
 
-> **BYD support scope:** These projects focus on BYD cars. They may work on other brands, but other brands are unsupported and there are no plans to add support or fix brand-specific incompatibilities.
+> 除这一项和版本号外，**其余全部与上游 0.2.21 一致**。
+> 自动开启车机热点也完全用上游的实现（见下）。
 
-[Download & website](https://shihabal3amri.github.io/DiPlay/) · [Release](https://github.com/shihabal3amri/DiPlay/releases/tag/v0.2.21) · [Report a problem](https://github.com/shihabal3amri/DiPlay/issues/new/choose)
+> 本分支是在**非比亚迪**车机上验证出来的（联发科 MT8227L 后装车机，Android 8.1）。
+> 上游主要面向比亚迪，本分支补上了通用固件上缺失的那条路。
 
-![DiPlay home](site/assets/home.png)
+安装包名 `com.shihab.diplay.wudi81v18`，**与上游的 `com.shihab.diplay` 互不冲突，可同时安装**。
 
-## 0.2.21 — public preview
+---
 
-Install on the **car**, not the iPhone. No jailbreak, dongle, Mac, account or authentication server is required for use. Core CarPlay does not require ADB; optional dashboard, battery, wheel-speed and parked-video features do. Your head unit must permit APK installation. The APK supports Android 7.0+ (API 24); Android 7.0–8.1 support is not yet confirmed on a vehicle. Wireless supports Wi-Fi Direct, the car’s existing hotspot or Existing Wi-Fi / Same LAN. Android 7.0–9 Wi-Fi Direct uses a firmware-dependent legacy path with generated group credentials and unverified requested frequency; see [Android 9 Wi-Fi Direct](docs/ANDROID9_WIFI_DIRECT.md). Android 10+ verifies its negotiated group frequency.
+## 目录
 
-- Wired USB and wireless CarPlay with local authentication.
-- BYD HUD navigation with arrows, distance and street names on verified firmware.
-- Car hotspot support, improved audio buffering and saved receive diagnostics.
-- Automatic address discovery, fixed-channel Wi-Fi fallbacks and successful-configuration memory.
-- Icon/text size, resolution and frame rate; applying a display change reconnects CarPlay.
-- Local diagnostic export. Reports are sent only if you choose to share them.
-- Separate installation alongside DiAuto. Run one projection app at a time.
+- [这次更新（0.2.21）](#这次更新021)
+- [这个分支解决什么问题](#这个分支解决什么问题)
+- [本分支唯一的改动](#本分支唯一的改动)
+- [支持的系统与架构](#支持的系统与架构)
+- [与上游的差异](#与上游的差异)
+- [功能清单](#功能清单)
+- [安装与授权](#安装与授权)
+- [已知限制](#已知限制)
+- [从源码构建](#从源码构建)
+- [许可与署名](#许可与署名)
 
-This is **not an Apple-certified product**. The APK bundles an experimental accessory identity recovered from public Carlinkit firmware, not a newly provisioned MFi identity for DiPlay. A bundled private key is extractable. Acceptance after future iOS updates, reliability across head units and suitability of that identity for general distribution are unresolved. This release invites community testing; it is not a guarantee of universal compatibility.
+---
 
-Earlier releases were tested on the development DiLink5.1 car: live windshield guidance and street names work, Car hotspot now starts CarPlay, and Wi-Fi Direct performance is substantially improved. Audio underrun recovery is improved in 0.2.15; remaining cutouts need current diagnostic reports. The 0.2.16 software Opus microphone fallback was accepted on a BOS Mini A1 head unit (Android 9) with an iPhone 12 on iOS 27. The floating-map test build was installed on the development DiLink 5.1 car; feedback led to the pinch corrections in 0.2.9. Earlier wheel-speed and video contributions were tested on a BYD Tang with DiLink 5.0 and an iPhone 15 Pro on iOS 27; wheel-speed dead reckoning in tunnels remains unverified. Broader head-unit and iOS compatibility is not guaranteed. The HUD firmware scope and cleanup limits are documented in [BYD navigation](docs/BYD_NAVIGATION.md).
+## 这次更新（0.2.21）
 
-## What’s new in 0.2.21
+**基线从上游 0.2.20 换到 0.2.21**，除「使用 iPhone 的麦克风」和版本号外，其余与上游完全一致。
 
-- Music plays in step with the iPhone again: on 0.2.20, pause, skip and track changes could come seconds late, and the speed could wobble.
-- Wired CarPlay recovers by itself when the iPhone never opens CarPlay, no longer waits forever after **Disconnect**, and keeps a connection that has already recovered.
-- DiPlay no longer closes when the microphone is used on head units without Android's own Opus encoder, and music comes back after a call or a short interruption.
-- Wireless CarPlay says why it cannot start; on BYD head units the dashboard is handed back to the car when CarPlay ends, and DiPlay no longer closes from the DiYou desktop card.
-- DiPlay installs on Android 7.0 and is available in Italian.
-- New options, off by default: temporary system bars, black rounded corners, a play/pause wheel key, double press for Siri, importing the car hotspot details, a home-screen bubble and the car's own music rhythm.
+> **上一版（v20）自带的「热点等待 60 秒」已经去掉。**
+> 0.2.21 的热点代码本身有了改进，本版直接采用上游原样，不再叠加自己的改动。
 
-See [0.2.21 release notes](docs/RELEASE-NOTES-0.2.21.md) and [validation](docs/VALIDATION.md) for contribution links and remaining physical tests. General stutter, calls/Siri, decoder and model-specific reports still need current-device evidence. [0.2.20 notes](docs/RELEASE-NOTES-0.2.20.md) remain available as historical guidance.
+### 上游 0.2.21 带来了什么
 
-If a problem remains, reproduce it on **0.2.21**, then use **Settings → Diagnostics → Save diagnostic report**. Android 10+ normally saves to **Downloads/DiPlay**; Android 7.0–9 asks for storage access and saves there too. If unavailable, use **View report** or **Share** from the confirmation, which identifies external/private fallback storage. Review the `.txt` and add it to a matching [existing issue](https://github.com/shihabal3amri/DiPlay/issues), or [create one](https://github.com/shihabal3amri/DiPlay/issues/new/choose). Include vehicle/head-unit model, exact firmware and Android/DiLink, phone/iOS, connection backend, relevant settings, steps and failure time. Reports are shared only when you choose; never post your hotspot password.
+- **修好了 0.2.20 引入的音乐延迟**（#814）：0.2.20 的音乐时钟调整只统计 Android 已缓冲的音频，
+  在缓冲区始终低于启动阈值的车机上会把音乐减速到上限，剩余音频堆积不解码（DiLink 3.0 堆到
+  192 个包，约 4 秒）。症状是**暂停、切歌、换曲延迟好几秒，速度发飘，切歌还可能重播上一首结尾**。
+  现在把「等待解码的音乐」也计入，并且不从堆积里学习车机时钟。
+- **软件 Opus 编码器不再把 DiPlay 关掉**（#866）：Android 9 及更早（没有系统 Opus 编码器）时，
+  内置编码器的内部断言会抛 `AssertionError`，DiPlay 没接住就整个退出。
+  发生在车机麦克风上行时（微信语音、Siri 启动）。现在这种失败只损失一帧 20 毫秒。
+- **通话或被打断后音乐能回来**（#804）：有些车机不说「打断结束了」，DiPlay 一直静音。
+  现在 iPhone 再播时会重新申请音频焦点，拿到才解除静音。
+- **有线 CarPlay 自己恢复**（#907、#841、#876）：iPhone 接受了启动请求却不开 CarPlay 时
+  最多等 30 秒就自己重试（原来只能拔插线）；点过**断开**后不再永远等待；
+  已经自愈的连接不会被随后的一次重试拆掉。
+- **导航播报降音量真的生效了**（#841）：之前调的是 Android 音轨音量，DiLink 3.0 直接忽略；
+  现在直接降导航音频本身。
+- **无线启动会说清原因**（#824）：不再卡在「正在准备 CarPlay…」，
+  而是直接说「热点网络未就绪」或「iPhone 没有及时连上 CarPlay」，重试停止后还会说明。
+- **热点相关的三处改进**：
+  - 误报「热点已关闭」的车机，连过一轮仍没有热点时，DiPlay 会撤销之前的信任，
+    下一轮直接提示热点是关的，不再空转一分钟（#827）
+  - **导入车机热点名称和密码**（实验性，设置 → 连接；Android 7.1 和 11+ 可用，
+    Android 8–10 不显示）
+  - 热点跑在平台不认作热点接口的 VLAN 上时也能识别（如 `eth0.3`，#885），
+    并可在「热点接口」里手填
+- **新功能（全部默认关闭）**：临时系统栏（5 秒）、黑色圆角、iPhone 圆角遮罩、
+  方向盘播放/暂停键、双击 Siri、主屏气泡、车机自身音乐律动、向老车机推送 16 频段音乐数据
+- **Android 7.0 支持**（minSdk 24）
+- **意大利语**（第 9 种语言）
 
-## Documentation
+---
 
-[Existing Wi-Fi / Same LAN](docs/EXISTING_WIFI.md) keeps the iPhone and head unit
-on an external router. See the guide for setup, build requirements and the
-BYD DiLink 4.0 / Android 10 clean-install validation result.
+## 这个分支解决什么问题
 
-- [Install and connect](docs/INSTALL.md)
-- [Compatibility and troubleshooting](docs/COMPATIBILITY.md)
-- [Smooth wireless CarPlay](docs/SMOOTH_WIRELESS.md)
-- [Privacy and diagnostic reports](docs/PRIVACY.md)
-- [Build from source](docs/BUILD.md) — select `mobile` for the main DiPlay app; `maphost` is a map sample.
-- [Validation](docs/VALIDATION.md)
-- [Release notes](CHANGELOG.md)
-- [Credits and licenses](docs/THIRD_PARTY_NOTICES.md)
+### 车机没有麦克风，通话和 Siri 没有输入
 
-The app and the website source include English, Arabic, Russian, Ukrainian, Spanish, Simplified Chinese, Traditional Chinese (Taiwan), and Japanese. Traditional Chinese uses Taiwan wording; the app also recognizes Hong Kong/Macao and explicit Hant selections without claiming separate regional translations. Choose the app language in Settings; on Android 13+, it stays synchronized with Android’s per-app language setting. See the [Traditional Chinese guide](README.zh-TW.md) for installation, settings, troubleshooting, privacy and build instructions.
+CarPlay 下麦克风音频默认由车机提供。车机没有麦克风时，通话对方听不到你、Siri 也收不到指令。
+本分支加了一个开关，让 DiPlay 在协议层声明「本车机不提供麦克风输入」，把输入交还给 iPhone。
 
-## Source and credits
+（本分支最初还解决过「开机后连不上、杀掉 App 重开就秒连」——根因是车机固件不自己开热点。
+这个问题上游在 0.2.20 已经自行解决，本版直接用上游实现。）
 
-Based on [xcertplay](https://github.com/shilapi/xcertplay), GPL-3.0. The home/settings UI and website adapt [DiAuto](https://github.com/shihabal3amri/DiAuto), AGPL-3.0; that license is included in `docs/licenses`. Preserve those notices when distributing modifications. CarPlay and its icon belong to Apple Inc.; no Apple or BYD affiliation or endorsement is implied.
+---
 
-This repository starts with a clean public source snapshot. Local research, tester reports and release-signing secrets are excluded. The complete source corresponding to the APK is provided with every release; experimental runtime identity assets are described separately in the build instructions and notices.
+## 本分支唯一的改动
 
-## Local release packaging
+### 使用 iPhone 的麦克风（实验性）
 
-The release APK intentionally contains the experimental accessory identity. The Git repository and source archive exclude all accessory and Android signing keys; tests generate synthetic identities at runtime. Source/CI builds omit runtime identity assets by default. Local release builds explicitly select an external asset directory. Publishing the APK makes its bundled identity extractable; building locally does not preserve that identity's confidentiality.
+**位置：设置 → 音频 → 音频路由 → 「使用 iPhone 的麦克风」**（默认**关闭**）
+
+原理在 AirPlay 协议层：`/info` 响应里的 `audioFormats` 条目可以带 `audioInputFormats` 字段。
+
+- 带上它 → 声明「本车机提供麦克风输入」→ iPhone 用车机麦克风
+- 不带它 → 声明「本车机不提供麦克风输入」→ iPhone 应该改用自己的麦克风
+
+打开开关后 DiPlay 就不带这个字段，同时也不启动本地音频采集。
+
+> **默认关闭是有意的。** 有麦克风的车机应该继续用车机麦克风——它离驾驶员更近，通话质量更好。
+> 只有确实没有麦克风的车机才需要打开。
+
+> ⚠️ **这是实验性功能，效果未经确认。** 协议层只是「声明能力」，iOS 是否真的回退到 iPhone 麦克风，
+> 需要在实车上打电话验证。如果无效，说明 iOS 在 CarPlay 下强制要求车机提供麦克风，这条路走不通。
+
+**设置要重连才生效**，因为 `/info` 只在会话建立时发送一次。打开开关后设置页会出现
+「立即重连」提示条。
+
+这个值也会跟着**设置备份**走（设置 → 关于 → 用手机扫码导出／导入）。
+
+---
+
+## 支持的系统与架构
+
+| 项目 | 说明 |
+| --- | --- |
+| 系统 | Android 7.0+（API 24+），`minSdk 24` / `targetSdk 37` |
+| 架构 | `arm64-v8a`、`armeabi-v7a`、`x86`、`x86_64` —— 四个都打，ARM 和 Intel 车机通用 |
+| 安装方式 | 车机需允许安装第三方 APK；无需 root、越狱、转接盒、账号或认证服务器 |
+| 连接方式 | 有线 USB、车机热点、Wi-Fi Direct、现有 Wi-Fi／同一局域网 |
+| 语言 | 英语、简体中文、繁体中文、日语、意大利语、阿拉伯语、俄语、乌克兰语、西班牙语 |
+
+### 实车验证状态
+
+| 项目 | 结果 |
+| --- | --- |
+| 车机 | `alps F9212A`，硬件 `ac8227l`（联发科 MT8227L，ARM），固件 `F9212A_00017_V001` |
+| 系统 | Android 9.1 显示版本 / 实际 **API 27**（Android 8.1），1024×600 |
+| 手机 | iPhone 14 Pro（`iPhone15,2`），AirPlay 870.14.1 |
+| 无线 CarPlay（车机热点） | **已确认可用**（v15/v18 时代验证），手机无需解锁即可连接 |
+| 自动开启车机热点 | **v18 已确认可用**：冷启动拉起热点约 5.7 秒，已开启时约 1.1–1.6 秒。**0.2.21 基线待重测** |
+| 视频解码 | 联发科硬件 H.264（`OMX.MTK.VIDEO.DECODER.AVC`） |
+| 使用 iPhone 的麦克风 | **未验证**，见上文说明 |
+| Wi-Fi Direct / 同一局域网 | 未在本车机上验证 |
+
+上游自身声明：Android 7.0–8.1 的支持仍待实车确认。本分支的验证结果正好补上了 8.1 这一段。
+
+---
+
+## 与上游的差异
+
+| 项目 | 上游 0.2.21 | 本分支 |
+| --- | --- | --- |
+| 使用 iPhone 的麦克风 | 无 | **有**，默认关闭，实验性 |
+| 其余一切（连接、热点、音频、显示、按键、设置菜单） | —— | **相同**（随上游 0.2.21，无改动） |
+| 包名 | `com.shihab.diplay` | `com.shihab.diplay.wudi81v18`（可共存） |
+| 版本号 | 0.2.21（40） | 0.2.21（**49**） |
+| README | 英文 / 简中 / 繁中三份 | **只有这一份中文** |
+
+---
+
+## 功能清单
+
+### 本分支自己的
+
+- 使用 iPhone 的麦克风（实验性，默认关闭）
+
+### 继承自上游 0.2.21
+
+- 有线 USB 与无线 CarPlay，本地认证，无需认证服务器
+- **自动开启车机热点**：非比亚迪车机在 Android 8.0–10 上只需 Android 的「修改系统设置」权限；
+  比亚迪走 ADB；固件没有热点命令时走系统 shell 兜底；可导入车机热点名称密码
+- 车机热点、Wi-Fi Direct、现有 Wi-Fi／同一局域网三种无线方式
+- 启动恢复：首包看门狗、退避重试、热点地址连续确认、稳定后重置预算
+- **音乐播放速率自适应**（修好 0.2.20 的延迟问题）、音频线程 audio priority
+- **音乐缓冲分无线／USB 两套**、导航播报可单独降音量（−20 ~ 0 dB）
+- **通话走扬声器** / 通话使用扬声器选项
+- **设置菜单按目标分组**（车内菜单 + 主设置页）
+- **设置备份与恢复**：设置 → 关于 → 用手机扫码导出／导入设置
+- **认证目标可在设置里切换**（Local offline / USB-CH341）：设置 → 连接
+- 本地诊断报告导出（只有你主动分享才会外传）
+- 方向盘媒体键、仪表车速表、环境灯等可选功能
+- 实验性选项（默认关闭）：Harman 全屏、直角无安全区、USB 导航语音增强、联发科低延迟解码、
+  关闭媒体键音频焦点、通话走车机电话音频、FCE 仪表导航、缓冲音乐、HEVC、
+  临时系统栏、黑色圆角、主屏气泡、方向盘播放键、双击 Siri、车机音乐律动等
+
+---
+
+## 安装与授权
+
+### 1. 安装
+
+下载本仓库 Release 里的 APK，拷到车机安装。**装在车上，不是装在 iPhone 上。**
+
+> 本仓库的 APK 使用 **Android 调试签名**，仅适合自测与社区分发。它无法覆盖安装上游的正式版
+> （签名不同），但可以与本分支的旧版本原地升级（同包名、同签名）。
+
+### 2. 连接一次 CarPlay
+
+首次进入会让选择连接方式。用**车机热点**模式时，填入车机热点的名称和密码
+（设置 → 连接 → 编辑已保存的热点）。
+
+### 3. 让 DiPlay 能开热点（可选）
+
+**设置 → 连接 → 「车辆热点」** 里的开关打开。
+
+- **非比亚迪车机（Android 8.0–10）**：会提示缺少「修改系统设置」权限，
+  点**「允许权限」**跳到系统页面勾选后返回即可。**不需要 ADB。**
+- **比亚迪车机**：走原有的 ADB 授权流程。
+- **Android 7.0／7.1 车机不提供这个开关**，因为系统会拒绝所有应用的该请求。
+
+> 「修改系统设置」**不是运行时权限，永远不会出现在「应用信息 → 权限」列表里**。它是特殊访问权限
+> （app-op），只能在：**设置 → 应用 → 特殊访问（或「特殊应用权限」）→ 修改系统设置 → 找到 DiPlay → 打开**。
+> DiPlay 的按钮会自动跳到这个页面，不用自己找。
+
+### 4. 打开 iPhone 麦克风（车机没麦克风时才需要）
+
+**设置 → 音频 → 音频路由 → 「使用 iPhone 的麦克风」** → 打开 → **重连一次 CarPlay**。
+
+### 5. 排查问题
+
+**设置 → 诊断 → 保存诊断报告**，导出 `.txt` 后附到 issue。报告不会自动上传，请先删除隐私信息
+（尤其是热点密码）。
+
+判断热点有没有成功启动，看这几行日志：
+
+```
+car hotspot auto-enable: ...                       // 结果
+car hotspot start: called ...                      // 反射调用成功
+car hotspot: shell tethering request ...           // 走 shell 兜底
+car hotspot: Android state=... writeSettings=...   // 失败时的现场
+```
+
+---
+
+## 已知限制
+
+- **未经 Apple 认证。** APK 内含从公开 Carlinkit 固件中提取的实验性配件身份，不是为 DiPlay 签发的
+  MFi 身份，其中私钥可被提取。未来 iOS 是否继续接受、能否公开分发，均未确定。
+- **自动开热点有系统版本门槛。** 非比亚迪车机的免 ADB 路径**仅在 Android 8.0–10 上可用**
+  （本分支的 API 27 车机在内）；Android 7.x 系统会拒绝所有应用，Android 11+ 把网络共享
+  移进了应用够不到的模块。比亚迪车机仍走 ADB。
+- **「修改系统设置」授权是必需的。** 没授予的话自动开热点不会生效。
+- **使用 iPhone 的麦克风未经实车确认。** 见上文。
+- 上游从未在 Android 8.1 上实车验证，本分支虽然补上了，但**只验证了这一台车机**，
+  其他车机、其他固件的行为不保证。
+- 部分车机在高视频负载下仍可能卡顿。Wi-Fi Direct 在车机自己的 Wi-Fi 客户端搜网时，
+  每 10 秒左右会丢一批音频包——**车机热点模式没有这个问题**，所以推荐用车机热点。
+- 读不到热点配置的固件（`configReadable=false`）下，DiPlay 无法校验你填的 SSID／密码
+  是否与车机实际热点一致，界面上的信道／频段会显示未知。
+- 有线连接需要数据口，且主机／设备角色正确。
+
+---
+
+## 从源码构建
+
+需要 JDK 25、Android SDK 37、NDK 28.2.13676358。
+
+```bash
+export JAVA_HOME=/path/to/jdk-25
+export ANDROID_HOME=/path/to/Android/Sdk
+export DIPLAY_AUTH_ASSETS_DIR=/path/to/runtime-assets   # 认证资源目录，见下
+
+./gradlew :mobile:assembleStandaloneDebug
+```
+
+产物：`mobile/build/outputs/apk/debug/mobile-debug.apk`
+
+`DIPLAY_AUTH_ASSETS_DIR` 需包含 `offline-mfi/identity.pk8` 与 `offline-mfi/certificate.p7b`。
+**认证资源与签名密钥都不在本仓库里**（`.gitignore` 已排除），构建时会校验资源完整性，
+缺失或多余都会失败。
+
+主应用是 `mobile` 模块；`maphost` 是地图演示程序。
+
+构建常见问题：
+
+- 换过源码树后如果 NDK 报 `hash_key.txt (拒绝访问)`，删掉 `*/build/.cxx` 再编。
+- 打包任务 `assembleStandaloneDebug` **不跑 lint**；要跑 lint 得显式执行 `:shared:lintDebug` 等。
+  改过反射类代码（例如 `PlatformTetheringStart` 周边）更要跑一次。
+
+---
+
+## 许可与署名
+
+本项目基于 **[xcertplay](https://github.com/shilapi/xcertplay)**，**GPL-3.0**。
+主页／设置界面与站点改造自 **[DiAuto](https://github.com/shihabal3amri/DiAuto)**，AGPL-3.0，
+许可证文本见 `docs/licenses`。**分发修改版时必须保留这些声明。**
+
+### 上游链条
+
+```
+shilapi/xcertplay                      原始项目
+  └─ shihabal3amri/DiPlay              主线，本分支的基线（0.2.21 / main）
+       └─ 本仓库                        wudi81 分支
+```
+
+- 上游主线：[github.com/shihabal3amri/DiPlay](https://github.com/shihabal3amri/DiPlay)
+- 上游文档：[安装与连接](docs/INSTALL.md) · [兼容性与排查](docs/COMPATIBILITY.md) ·
+  [无线流畅度](docs/SMOOTH_WIRELESS.md) · [缓冲音乐](docs/BUFFERED_AUDIO.md) ·
+  [隐私与诊断报告](docs/PRIVACY.md) · [从源码构建](docs/BUILD.md)
+
+CarPlay 及其图标归 Apple Inc. 所有。本项目与 Apple、比亚迪均无关联或背书关系。

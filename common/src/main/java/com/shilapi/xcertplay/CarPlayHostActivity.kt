@@ -504,6 +504,7 @@ class CarPlayHostActivity : ComponentActivity() {
         get() = HevcSupport.usable(hevcEnabled, hevcSoftwareDecoderEnabled, hevcDecoders)
     private var advancedAudioChannelMappingSupported = false
     private var advancedAudioChannelMapping = false
+    private var useIphoneMicrophone = false
     private var navigationStreamType = 14
     private var debugLogsEnabled = false
     private var autoStartOnBoot = false
@@ -888,6 +889,7 @@ class CarPlayHostActivity : ComponentActivity() {
         advancedAudioChannelMapping =
             advancedAudioChannelMappingSupported &&
                 AirPlayPersistence.loadAdvancedAudioChannelMapping(this)
+        useIphoneMicrophone = AirPlayPersistence.loadUseIphoneMicrophone(this)
         navigationStreamType = AirPlayPersistence.loadNavigationStreamType(this)
         debugLogsEnabled = AirPlayPersistence.loadDebugLogsEnabled(this)
         autoStartOnBoot = AirPlayPersistence.loadAutoStartOnBoot(this)
@@ -1181,6 +1183,7 @@ class CarPlayHostActivity : ComponentActivity() {
         advancedAudioChannelMapping =
             advancedAudioChannelMappingSupported &&
                 AirPlayPersistence.loadAdvancedAudioChannelMapping(this)
+        useIphoneMicrophone = AirPlayPersistence.loadUseIphoneMicrophone(this)
         val followClusterUsage = DiLink51ClusterLayout.automatic(this) ||
             AirPlayPersistence.loadClusterSmallWindowMode(this) == CLUSTER_SMALL_WINDOW_AUTO
         if (followClusterUsage && clusterMonitor == null) {
@@ -4986,7 +4989,7 @@ class CarPlayHostActivity : ComponentActivity() {
             cluster = clusterDisplayConfig(),
             rightHandDrive = rightHandDrive,
             hevc = sessionHevc,
-            microphone = microphoneAvailable,
+            microphone = microphoneAvailable && !useIphoneMicrophone,
             microphoneOpus = com.shilapi.xcertplay.media.OpusEncoderSupport.isAvailable(),
             manufacturer = normalizedManufacturer(),
             model = normalizedModel(),
@@ -5225,7 +5228,7 @@ class CarPlayHostActivity : ComponentActivity() {
     private fun createMediaEngine(sink: AndroidMediaSink): CarPlayMediaEngine =
         CarPlayMediaEngine(
             sink = sink,
-            microphoneEnabled = microphoneAvailable,
+            microphoneEnabled = microphoneAvailable && !useIphoneMicrophone,
             audioCaptureDirectory = audioCaptureDirectory(),
         )
 

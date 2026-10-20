@@ -1,3 +1,22 @@
+# wudi81 v21 — 2026-10-20
+
+以上游 `main`（0.2.21）为基线重建，只保留本分支自有的一项功能，其余与上游一致。
+
+- **使用 iPhone 的麦克风**（实验性，默认关闭）：让 DiPlay 在 AirPlay `/info` 里省略
+  `audioInputFormats`，把麦克风输入交还给 iPhone，同时不启动本地音频采集。
+  车机没有麦克风时用。开关在 **设置 → 音频 → 音频路由**；打开后出现「立即重连」提示条
+  （`/info` 每个会话只发一次）。这个值也会跟着设置备份走。
+  **iOS 是否真的回退到手机麦克风尚未实车验证。** 上游没有这个功能。
+- 包名保持 `com.shihab.diplay.wudi81v18`（versionCode 49），可直接在原地升级上一版 v20。
+
+说明：**上一版自带的「热点等待 60 秒」已去掉。** 0.2.21 的热点代码本身有改进
+（`hotspotNeverCameUp` 误报收场、`apconfig` 导入热点信息、VLAN 接口支持，见 #827/#769/#885），
+本版直接采用上游原样，不再叠加自己的改动。
+
+这次跟进的 0.2.21 主要修复：0.2.20 引入的音乐延迟（#814）、软件 Opus 编码器崩溃
+（#866，影响 Android 9 及更早）、通话打断后音乐不恢复（#804）、有线 CarPlay 自恢复
+（#907/#841/#876）、导航播报降音量失效（#841）。另新增意大利语与 Android 7.0 支持。
+
 # DiPlay 0.2.21 — 2026-10-17
 
 - Fix the 0.2.20 music lag by counting the music still waiting to be decoded in the clock adjustment, and bring music back after an interruption when the iPhone plays again (#814, #804).

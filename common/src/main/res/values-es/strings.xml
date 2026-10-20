@@ -879,6 +879,8 @@
     <string name="settings_mfi_target_description">Elige USB/CH341 solo si hay un adaptador de autenticación CH341 conectado a la unidad principal. Sin él, elige Local sin conexión. Se aplica en la próxima conexión.</string>
     <string name="settings_call_speakerphone">Llamadas por el altavoz</string>
     <string name="settings_call_speakerphone_description">Para un teléfono o una tableta Android usados como unidad principal: reproduce las llamadas de CarPlay por su altavoz en lugar del auricular y usa su micrófono manos libres. Déjalo desactivado en la unidad principal de un coche. Se aplica desde la próxima llamada.</string>
+        <string name="settings_use_iphone_microphone">Usar el micrófono del iPhone</string>
+    <string name="settings_use_iphone_microphone_description">Actívalo cuando esta unidad principal no tenga micrófono. DiPlay indica al iPhone que no proporciona entrada de micrófono, así que las llamadas y Siri deberían usar el micrófono del propio iPhone. Se aplica en la próxima conexión.</string>
     <string name="settings_navigation_attenuation">Volumen de las indicaciones de navegación</string>
     <string name="settings_navigation_attenuation_value">%1$d dB</string>
     <string name="settings_navigation_attenuation_description">Reduce solo las indicaciones de navegación de CarPlay, sin cambiar música ni llamadas. Se aplica al instante; sigue funcionando el volumen de navegación de la unidad.</string>

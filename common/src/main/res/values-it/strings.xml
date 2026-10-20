@@ -954,6 +954,8 @@
     <string name="settings_mfi_target_description">Scegli USB/CH341 solo mentre un adattatore di autenticazione CH341 è collegato alla head unit. Senza, scegli Locale offline. Si applica alla prossima connessione.</string>
     <string name="settings_call_speakerphone">Chiamate sul vivavoce</string>
     <string name="settings_call_speakerphone_description">Per un telefono o tablet Android usato come head unit: riproduce le chiamate CarPlay sul suo altoparlante invece che sull’auricolare e usa il suo microfono vivavoce. Lascialo disattivato su una head unit di un’auto. Si applica dalla prossima chiamata.</string>
+        <string name="settings_use_iphone_microphone">Usa il microfono dell’iPhone</string>
+    <string name="settings_use_iphone_microphone_description">Attivalo quando questa autoradio non ha un microfono. DiPlay dice all’iPhone che non fornisce alcun ingresso microfono, quindi le chiamate e Siri dovrebbero usare il microfono dell’iPhone. Si applica alla connessione successiva.</string>
     <string name="settings_navigation_attenuation">Volume delle indicazioni di navigazione</string>
     <string name="settings_navigation_attenuation_value">%1$d dB</string>
     <string name="settings_navigation_attenuation_description">Riduce le indicazioni di navigazione di CarPlay senza cambiare il volume di musica o chiamate. Si applica subito; il volume di navigazione della head unit continua a funzionare.</string>

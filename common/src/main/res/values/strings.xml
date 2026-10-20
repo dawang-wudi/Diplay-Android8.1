@@ -982,6 +982,8 @@
     <string name="settings_mfi_target_description">Choose USB/CH341 only while a CH341 authentication adapter is connected to the head unit. Without one, choose Local offline. Applies at the next connection.</string>
     <string name="settings_call_speakerphone">Calls on the loudspeaker</string>
     <string name="settings_call_speakerphone_description">For an Android phone or tablet used as the head unit: plays CarPlay calls on its loudspeaker instead of the earpiece and uses its hands-free microphone. Leave off on a car head unit. Applies from the next call.</string>
+        <string name="settings_use_iphone_microphone">Use the iPhone microphone</string>
+    <string name="settings_use_iphone_microphone_description">Turn this on when this head unit has no microphone. DiPlay tells the iPhone that it provides no microphone input, so calls and Siri should use the iPhone’s own microphone. Applies at the next connection.</string>
     <string name="settings_navigation_attenuation">Navigation guidance volume</string>
     <string name="settings_navigation_attenuation_value">%1$d dB</string>
     <string name="settings_navigation_attenuation_description">Reduce CarPlay navigation guidance without changing music or call volume. Applies immediately; your head unit’s navigation volume still works.</string>

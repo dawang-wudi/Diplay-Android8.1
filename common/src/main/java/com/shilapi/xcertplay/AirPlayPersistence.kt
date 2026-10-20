@@ -119,6 +119,7 @@ object AirPlayPersistence {
     private const val KEY_BLACK_CORNER_RADIUS = "black_corner_radius_dp"
     private const val KEY_ADAPT_PIP_RESOLUTION = "adapt_pip_resolution"
     private const val KEY_AUTO_START_ON_BOOT = "auto_start_on_boot"
+    private const val KEY_USE_IPHONE_MICROPHONE = "use_iphone_microphone"
     private const val KEY_BT_SUSPEND_DURING_CARPLAY = "bt_suspend_during_carplay"
     private const val KEY_HIDE_BYD_CALL_POPUP = "hide_byd_call_popup"
     private const val KEY_BT_SUSPEND_DELAY = "bt_suspend_delay_seconds"
@@ -516,6 +517,22 @@ object AirPlayPersistence {
     fun saveAutoStartOnBoot(context: Context, enabled: Boolean) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
             .putBoolean(KEY_AUTO_START_ON_BOOT, enabled)
+            .apply()
+    }
+
+    /**
+     * A head unit with no microphone leaves calls and Siri with no input, because iOS normally
+     * takes microphone audio from the CarPlay accessory. When this is on, DiPlay offers no
+     * microphone input, so the iPhone should use its own. Off by default: a head unit that does
+     * have a microphone should keep using it, as it sits closer to the driver.
+     */
+    fun loadUseIphoneMicrophone(context: Context): Boolean =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getBoolean(KEY_USE_IPHONE_MICROPHONE, false)
+
+    fun saveUseIphoneMicrophone(context: Context, enabled: Boolean) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putBoolean(KEY_USE_IPHONE_MICROPHONE, enabled)
             .apply()
     }
 
