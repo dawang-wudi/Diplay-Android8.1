@@ -1,22 +1,13 @@
-# wudi81 v20 — 2026-10-15
+# DiPlay 0.2.21 — 2026-10-17
 
-以上游 `main`（0.2.20）为基线重建，只保留本分支自有的两项改动，其余与上游一致。
+- Fix the 0.2.20 music lag by counting the music still waiting to be decoded in the clock adjustment, and bring music back after an interruption when the iPhone plays again (#814, #804).
+- Let wired CarPlay recover by itself: retry when the iPhone never opens its session, stop waiting forever for an ignored mode request, keep an attempt that recovered before its retry, and lower navigation guidance in the audio itself (#907, #841, #876).
+- Stop DiPlay closing when the software Opus encoder fails a check, name the wireless startup failure and refused permissions on the CarPlay screen, stop re-asking about the car hotspot on Android 13, find car hotspots on VLAN interfaces, wait for Bluetooth that is turning on, and save the CarPlay menu settings when an unused hotspot is empty (#866, #824, #795, #893, #885, #822, #853).
+- On BYD head units, hand the dashboard back to the car when CarPlay ends, survive the DiYou desktop card, warn again about a car hotspot that stays off, open BYD's own screens on DiLink 1.0, hide the call popup on Android 10+, clarify the call key setting and offer DiLink 7.0's split screen (#909, #827, #794, #845, #842, #875).
+- Install on Android 7.0, add Italian, and add options that are off by default: temporary system bars, black rounded corners, a play/pause wheel key, double press for Siri, car hotspot import, a home-screen bubble, the car's own music rhythm and music data for it (#847, #863, #818, #811, #823, #813, #769, #844, #695, #908).
+- Record more in the diagnostic report: DiPlay's own frames in the crash record, the USB devices Android lists while waiting for the iPhone, a wheel-speed line each minute, and the USB network traffic when the iPhone never opens CarPlay; note screenshots under screen turning (#827, #830, #862, #907, #864).
 
-- **使用 iPhone 的麦克风**（实验性，默认关闭）：让 DiPlay 在 AirPlay `/info` 里省略
-  `audioInputFormats`，把麦克风输入交还给 iPhone。车机没有麦克风时用。
-  开关在 设置 → 音频 → 音频路由。**iOS 是否真的回退到手机麦克风尚未验证。**
-  （上游没有这个功能，是本分支独有的。）
-- **车机热点等待预算 60 秒**：上游「等车机自己热点」与「开热点请求」共用 15 秒
-  （`HOTSPOT_READY_MILLIS`）。本版新增 `MANUAL_HOTSPOT_WAIT_MILLIS = 60_000L`，
-  在 MANUAL 模式下取两者较大值，避免慢固件的 AP 被挤掉；开热点请求本身仍限 15 秒，
-  失败能快速反馈。开热点本身的实现完全用上游那套。
-- 包名保持 `com.shihab.diplay.wudi81v18`（versionCode 48），可与车机上现有版本共存。
-
-说明：上游 0.2.19/0.2.20 已自行实现了「非比亚迪固件走系统设置手动授权开热点」
-（#748、#775、#777，见 `systemHotspotSettings()` 与 `PlatformTetheringStart`），
-覆盖 Android 8.0–10（含本分支的 API 27 车机），并额外提供 shell 兜底与热点误报关闭的处理。
-因此本版**不再携带自己的 `CarHotspotEnabler`**，热点功能以上游实现为准，
-只保留上面那条 60 秒等待预算。
+See [0.2.21 release notes](docs/RELEASE-NOTES-0.2.21.md) for contribution links and limits, and [validation](docs/VALIDATION.md) for checks. Full-release vehicle acceptance is not claimed.
 
 # DiPlay 0.2.20 — 2026-10-15
 

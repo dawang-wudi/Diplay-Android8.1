@@ -43,5 +43,5 @@ release-signing.properties
 # Local agent working notes
 .workbuddy-ai/
 
-# Local rebase scratch space (upstream tarballs, staged tree)
+# Local rebase scratch space (upstream tarballs, staged trees, release assets)
 /.work/
